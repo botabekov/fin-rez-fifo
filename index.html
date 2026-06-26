@@ -17,172 +17,41 @@
       --success: #16a34a;
       --warning-bg: #fefce8;
       --warning-border: #fde68a;
+      --info-bg: #eff6ff;
+      --info-border: #bfdbfe;
       --radius: 12px;
     }
-
     * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 14px;
-    }
-
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 18px 24px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 22px;
-      line-height: 1.2;
-    }
-
-    .subtitle {
-      margin-top: 6px;
-      color: var(--muted);
-    }
-
-    main {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-      margin-bottom: 18px;
-      box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
-    }
-
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-
-    button,
-    .file-label {
-      border: 1px solid var(--border);
-      background: var(--surface);
-      border-radius: 10px;
-      padding: 10px 14px;
-      cursor: pointer;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    button.primary,
-    .file-label.primary {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 24px; position: sticky; top: 0; z-index: 10; }
+    h1 { margin: 0; font-size: 22px; line-height: 1.2; }
+    h3 { margin-top: 0; }
+    .subtitle { margin-top: 6px; color: var(--muted); }
+    main { max-width: 1320px; margin: 0 auto; padding: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 18px; box-shadow: 0 1px 2px rgb(15 23 42 / 0.04); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    button, .file-label { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600; color: var(--text); }
+    button.primary, .file-label.primary { background: var(--primary); border-color: var(--primary); color: white; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
     input[type="file"] { display: none; }
-
-    .note {
-      background: var(--warning-bg);
-      border: 1px solid var(--warning-border);
-      color: #713f12;
-      border-radius: 10px;
-      padding: 12px;
-      line-height: 1.5;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .metric {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      background: #fbfdff;
-    }
-
-    .metric label {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-
-    .metric strong {
-      font-size: 20px;
-      word-break: break-word;
-    }
-
-    .table-wrap {
-      overflow: auto;
-      max-height: 62vh;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 1100px;
-      background: var(--surface);
-      font-size: 12px;
-    }
-
-    th,
-    td {
-      border-bottom: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-      padding: 8px 10px;
-      text-align: left;
-      vertical-align: top;
-      white-space: nowrap;
-    }
-
-    th {
-      position: sticky;
-      top: 0;
-      background: #f1f5f9;
-      color: #334155;
-      z-index: 2;
-      font-size: 11px;
-      text-transform: uppercase;
-    }
-
+    .note { background: var(--warning-bg); border: 1px solid var(--warning-border); color: #713f12; border-radius: 10px; padding: 12px; line-height: 1.5; }
+    .info { background: var(--info-bg); border: 1px solid var(--info-border); color: #1e40af; border-radius: 10px; padding: 12px; line-height: 1.5; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .metric { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: #fbfdff; }
+    .metric label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .metric strong { font-size: 20px; word-break: break-word; }
+    .table-wrap { overflow: auto; max-height: 62vh; border: 1px solid var(--border); border-radius: 12px; }
+    table { border-collapse: collapse; width: 100%; min-width: 1180px; background: var(--surface); font-size: 12px; }
+    th, td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; white-space: nowrap; }
+    th { position: sticky; top: 0; background: #f1f5f9; color: #334155; z-index: 2; font-size: 11px; text-transform: uppercase; }
     tr:hover td { background: #f8fafc; }
-
     .profit { color: var(--success); font-weight: 700; }
     .loss { color: var(--danger); font-weight: 700; }
     .muted { color: var(--muted); }
-
-    .error-list {
-      margin: 0;
-      padding-left: 18px;
-      color: var(--danger);
-    }
-
-    @media (max-width: 900px) {
-      main { padding: 14px; }
-      .grid { grid-template-columns: 1fr; }
-      header { padding: 14px; }
-    }
+    .error-list { margin: 0; padding-left: 18px; color: var(--danger); }
+    .small { font-size: 12px; }
+    code { background: #f1f5f9; border: 1px solid var(--border); padding: 2px 5px; border-radius: 6px; }
+    @media (max-width: 900px) { main { padding: 14px; } .grid { grid-template-columns: 1fr; } header { padding: 14px; } }
   </style>
 </head>
 <body>
@@ -203,7 +72,12 @@
     </section>
 
     <section class="card note">
-      Это безопасная публичная версия без персональных данных. Для расчёта ожидаются колонки: ISIN, наименование, рынок, направление операции, дата операции, количество, цена, комиссия и валюта. Названия колонок могут быть на русском языке, как в исходном прототипе.
+      Версия обновлена: теперь файл читается по всем листам Excel, а строка заголовков определяется автоматически. Это нужно для файлов, где перед таблицей есть служебная шапка.
+    </section>
+
+    <section id="diagnosticCard" class="card info" style="display:none">
+      <strong>Диагностика загрузки</strong>
+      <div id="diagnostic" class="small"></div>
     </section>
 
     <section class="card">
@@ -216,7 +90,7 @@
     </section>
 
     <section id="errorsCard" class="card" style="display:none">
-      <h3>Ошибки проверки</h3>
+      <h3>Ошибки / предупреждения</h3>
       <ul id="errors" class="error-list"></ul>
     </section>
 
@@ -226,23 +100,10 @@
         <table>
           <thead>
             <tr>
-              <th>Дата</th>
-              <th>ISIN</th>
-              <th>Инструмент</th>
-              <th>Рынок</th>
-              <th>Операция</th>
-              <th>Кол-во</th>
-              <th>Цена</th>
-              <th>Комиссия</th>
-              <th>Себестоимость</th>
-              <th>Сумма продажи</th>
-              <th>Прибыль / убыток</th>
-              <th>Остаток</th>
+              <th>Дата</th><th>ISIN</th><th>Инструмент</th><th>Рынок</th><th>Операция</th><th>Кол-во</th><th>Цена</th><th>Комиссия</th><th>Себестоимость</th><th>Сумма продажи</th><th>Прибыль / убыток</th><th>Остаток</th>
             </tr>
           </thead>
-          <tbody id="resultBody">
-            <tr><td colspan="12" class="muted">Загрузите файл и нажмите «Рассчитать FIFO».</td></tr>
-          </tbody>
+          <tbody id="resultBody"><tr><td colspan="12" class="muted">Загрузите файл. Если строки найдены, кнопка расчёта станет активной.</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -250,62 +111,93 @@
 
   <script>
     let rows = [];
-
     const els = {
-      fileInput: document.getElementById('fileInput'),
-      calcBtn: document.getElementById('calcBtn'),
-      resetBtn: document.getElementById('resetBtn'),
-      fileName: document.getElementById('fileName'),
-      resultBody: document.getElementById('resultBody'),
-      metricRows: document.getElementById('metricRows'),
-      metricInstruments: document.getElementById('metricInstruments'),
-      metricPnl: document.getElementById('metricPnl'),
-      metricErrors: document.getElementById('metricErrors'),
-      errorsCard: document.getElementById('errorsCard'),
-      errors: document.getElementById('errors')
+      fileInput: document.getElementById('fileInput'), calcBtn: document.getElementById('calcBtn'), resetBtn: document.getElementById('resetBtn'), fileName: document.getElementById('fileName'), resultBody: document.getElementById('resultBody'), metricRows: document.getElementById('metricRows'), metricInstruments: document.getElementById('metricInstruments'), metricPnl: document.getElementById('metricPnl'), metricErrors: document.getElementById('metricErrors'), errorsCard: document.getElementById('errorsCard'), errors: document.getElementById('errors'), diagnosticCard: document.getElementById('diagnosticCard'), diagnostic: document.getElementById('diagnostic')
     };
 
     const aliases = {
-      isin: ['isin', 'isin цб', 'исин', 'isin инструмента'],
-      name: ['наименование', 'наименование (тип)', 'инструмент', 'ценная бумага', 'название'],
-      market: ['рынок', 'рынок цб', 'биржа'],
-      direction: ['направление операции', 'операция', 'тип операции'],
-      date: ['дата торговой операции', 'дата операции', 'дата'],
-      qty: ['количество', 'количество цб', 'кол-во', 'qty'],
+      isin: ['isin', 'isin цб', 'исин', 'isin инструмента', 'isin конвертируемой цб'],
+      name: ['наименование', 'наименование (тип)', 'инструмент', 'ценная бумага', 'название', 'наименование цб'],
+      market: ['рынок', 'рынок цб', 'биржа', 'market'],
+      direction: ['направление операции', 'операция', 'тип операции', 'operation'],
+      date: ['дата торговой операции', 'дата операции', 'дата', 'trade date'],
+      qty: ['количество', 'количество цб', 'кол-во', 'qty', 'quantity'],
       price: ['цена', 'price'],
-      commission: ['комиссия', 'комиссии по сделке'],
+      commission: ['комиссия', 'комиссии по сделке', 'commission'],
       currency: ['код валюты', 'валюта', 'currency']
     };
 
     function normalizeKey(value) {
-      return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[№#]/g, '').trim();
     }
 
-    function findColumn(headers, key) {
-      const options = aliases[key].map(normalizeKey);
-      return headers.find(h => options.includes(normalizeKey(h))) || null;
+    function matchesAlias(header, key) {
+      const h = normalizeKey(header);
+      if (!h) return false;
+      return aliases[key].some(alias => {
+        const a = normalizeKey(alias);
+        return h === a || h.includes(a) || a.includes(h);
+      });
+    }
+
+    function findColumnIndex(headers, key) {
+      for (let i = 0; i < headers.length; i++) {
+        if (matchesAlias(headers[i], key)) return i;
+      }
+      return -1;
+    }
+
+    function detectHeaderRow(matrix) {
+      let best = { index: -1, score: 0, headers: [] };
+      const maxRows = Math.min(matrix.length, 120);
+      for (let i = 0; i < maxRows; i++) {
+        const row = matrix[i] || [];
+        const headers = row.map(v => String(v || '').trim());
+        let score = 0;
+        for (const key of Object.keys(aliases)) {
+          if (findColumnIndex(headers, key) >= 0) score++;
+        }
+        if (score > best.score) best = { index: i, score, headers };
+      }
+      return best.score >= 3 ? best : null;
     }
 
     function parseNumber(value) {
       if (value === null || value === undefined || value === '') return 0;
       if (typeof value === 'number') return value;
-      const cleaned = String(value).replace(/\s/g, '').replace(',', '.').replace(/[()]/g, '');
-      const num = Number(cleaned);
-      return Number.isFinite(num) ? num : 0;
+      let s = String(value).trim();
+      let negative = false;
+      if (/^\(.*\)$/.test(s)) negative = true;
+      s = s.replace(/[()]/g, '').replace(/\s/g, '').replace(/,/g, '.').replace(/[^0-9.\-]/g, '');
+      const num = Number(s);
+      if (!Number.isFinite(num)) return 0;
+      return negative ? -Math.abs(num) : num;
+    }
+
+    function parseDate(value) {
+      if (value instanceof Date) return value.toLocaleDateString('ru-RU');
+      if (typeof value === 'number' && value > 25000 && value < 80000) {
+        try { return XLSX.SSF.format('dd.mm.yyyy', value); } catch { return String(value); }
+      }
+      return String(value || '').trim();
     }
 
     function fmt(value) {
       return Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    function htmlEscape(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    }
+
     function isBuy(direction, qty) {
       const d = normalizeKey(direction);
-      return d.includes('покуп') || d.includes('прием') || qty > 0 && !d.includes('продаж');
+      return d.includes('покуп') || d.includes('прием') || d.includes('зачис') || (qty > 0 && !d.includes('продаж') && !d.includes('перечис'));
     }
 
     function isSell(direction, qty) {
       const d = normalizeKey(direction);
-      return d.includes('продаж') || d.includes('перечисление') || qty < 0;
+      return d.includes('продаж') || d.includes('перечис') || d.includes('спис') || qty < 0;
     }
 
     function renderTable(result) {
@@ -313,37 +205,76 @@
         els.resultBody.innerHTML = '<tr><td colspan="12" class="muted">Нет данных для отображения.</td></tr>';
         return;
       }
-
       els.resultBody.innerHTML = result.map(row => {
         const pnlClass = row.pnl > 0 ? 'profit' : row.pnl < 0 ? 'loss' : '';
-        return `
-          <tr>
-            <td>${row.date || ''}</td>
-            <td>${row.isin || ''}</td>
-            <td>${row.name || ''}</td>
-            <td>${row.market || ''}</td>
-            <td>${row.direction || ''}</td>
-            <td>${fmt(row.qty)}</td>
-            <td>${fmt(row.price)}</td>
-            <td>${fmt(row.commission)}</td>
-            <td>${row.cost ? fmt(row.cost) : ''}</td>
-            <td>${row.sale ? fmt(row.sale) : ''}</td>
-            <td class="${pnlClass}">${row.pnl !== null ? fmt(row.pnl) : ''}</td>
-            <td>${fmt(row.balance)}</td>
-          </tr>
-        `;
+        return `<tr><td>${htmlEscape(row.date)}</td><td>${htmlEscape(row.isin)}</td><td>${htmlEscape(row.name)}</td><td>${htmlEscape(row.market)}</td><td>${htmlEscape(row.direction)}</td><td>${fmt(row.qty)}</td><td>${fmt(row.price)}</td><td>${fmt(row.commission)}</td><td>${row.cost !== null ? fmt(row.cost) : ''}</td><td>${row.sale !== null ? fmt(row.sale) : ''}</td><td class="${pnlClass}">${row.pnl !== null ? fmt(row.pnl) : ''}</td><td>${fmt(row.balance)}</td></tr>`;
       }).join('');
     }
 
     function renderErrors(errors) {
       els.metricErrors.textContent = errors.length;
-      if (!errors.length) {
-        els.errorsCard.style.display = 'none';
-        els.errors.innerHTML = '';
-        return;
-      }
+      if (!errors.length) { els.errorsCard.style.display = 'none'; els.errors.innerHTML = ''; return; }
       els.errorsCard.style.display = 'block';
-      els.errors.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
+      els.errors.innerHTML = errors.map(e => `<li>${htmlEscape(e)}</li>`).join('');
+    }
+
+    function renderDiagnostic(lines) {
+      els.diagnosticCard.style.display = 'block';
+      els.diagnostic.innerHTML = lines.map(x => `<div>${x}</div>`).join('');
+    }
+
+    function rowToObject(values, col, sheetName) {
+      const qty = parseNumber(col.qty >= 0 ? values[col.qty] : 0);
+      const price = parseNumber(col.price >= 0 ? values[col.price] : 0);
+      const commission = parseNumber(col.commission >= 0 ? values[col.commission] : 0);
+      return {
+        sheetName,
+        isin: col.isin >= 0 ? String(values[col.isin] || '').trim() : '',
+        name: col.name >= 0 ? String(values[col.name] || '').trim() : '',
+        market: col.market >= 0 ? String(values[col.market] || '').trim() : '',
+        direction: col.direction >= 0 ? String(values[col.direction] || '').trim() : '',
+        date: col.date >= 0 ? parseDate(values[col.date]) : '',
+        qty,
+        price,
+        commission,
+        currency: col.currency >= 0 ? String(values[col.currency] || '').trim() : ''
+      };
+    }
+
+    function readWorkbook(workbook) {
+      const foundRows = [];
+      const diagnostics = [];
+      const warnings = [];
+      for (const sheetName of workbook.SheetNames) {
+        const sheet = workbook.Sheets[sheetName];
+        const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+        const detected = detectHeaderRow(matrix);
+        if (!detected) {
+          diagnostics.push(`Лист <code>${htmlEscape(sheetName)}</code>: заголовки не найдены`);
+          continue;
+        }
+        const headers = detected.headers;
+        const col = {
+          isin: findColumnIndex(headers, 'isin'), name: findColumnIndex(headers, 'name'), market: findColumnIndex(headers, 'market'), direction: findColumnIndex(headers, 'direction'), date: findColumnIndex(headers, 'date'), qty: findColumnIndex(headers, 'qty'), price: findColumnIndex(headers, 'price'), commission: findColumnIndex(headers, 'commission'), currency: findColumnIndex(headers, 'currency')
+        };
+        const requiredMissing = [];
+        if (col.isin < 0) requiredMissing.push('ISIN');
+        if (col.qty < 0) requiredMissing.push('Количество');
+        if (col.price < 0) requiredMissing.push('Цена');
+        if (requiredMissing.length) warnings.push(`Лист ${sheetName}: не найдены важные колонки: ${requiredMissing.join(', ')}`);
+
+        const before = foundRows.length;
+        for (let r = detected.index + 1; r < matrix.length; r++) {
+          const values = matrix[r] || [];
+          const item = rowToObject(values, col, sheetName);
+          if (!item.isin && !item.name && !item.direction && item.qty === 0 && item.price === 0) continue;
+          if (!item.isin && !item.name) continue;
+          foundRows.push(item);
+        }
+        const added = foundRows.length - before;
+        diagnostics.push(`Лист <code>${htmlEscape(sheetName)}</code>: строка заголовков ${detected.index + 1}, найдено строк ${added}, совпадений колонок ${detected.score}`);
+      }
+      return { rows: foundRows, diagnostics, warnings };
     }
 
     function calculateFifo() {
@@ -351,26 +282,21 @@
       const result = [];
       const errors = [];
       let totalPnl = 0;
-
       const sorted = [...rows].sort((a, b) => String(a.date).localeCompare(String(b.date)));
-
       for (const r of sorted) {
-        const isin = r.isin || 'NO_ISIN';
+        const isin = r.isin || r.name || 'NO_ISIN';
         if (!lotsByIsin.has(isin)) lotsByIsin.set(isin, []);
         const lots = lotsByIsin.get(isin);
         const absQty = Math.abs(r.qty);
-
         if (isBuy(r.direction, r.qty)) {
           lots.push({ qty: absQty, price: r.price, commission: r.commission });
           const balance = lots.reduce((s, l) => s + l.qty, 0);
           result.push({ ...r, qty: absQty, cost: absQty * r.price, sale: null, pnl: null, balance });
           continue;
         }
-
         if (isSell(r.direction, r.qty)) {
           let remaining = absQty;
           let cost = 0;
-
           while (remaining > 0 && lots.length) {
             const lot = lots[0];
             const take = Math.min(remaining, lot.qty);
@@ -379,21 +305,18 @@
             remaining -= take;
             if (lot.qty <= 0.0000001) lots.shift();
           }
-
-          if (remaining > 0) {
-            errors.push(`${isin}: продажа/списание ${fmt(absQty)}, не хватает остатка ${fmt(remaining)} шт.`);
-          }
-
+          if (remaining > 0) errors.push(`${isin}: продажа/списание ${fmt(absQty)}, не хватает остатка ${fmt(remaining)} шт.`);
           const soldQty = absQty - remaining;
           const sale = soldQty * r.price;
           const pnl = sale - cost;
           totalPnl += pnl;
           const balance = lots.reduce((s, l) => s + l.qty, 0);
           result.push({ ...r, qty: -absQty, cost, sale, pnl, balance });
+          continue;
         }
+        errors.push(`${isin}: операция не распознана — ${r.direction || 'пусто'}`);
       }
-
-      els.metricInstruments.textContent = new Set(rows.map(r => r.isin).filter(Boolean)).size;
+      els.metricInstruments.textContent = new Set(rows.map(r => r.isin || r.name).filter(Boolean)).size;
       els.metricPnl.textContent = fmt(totalPnl);
       renderErrors(errors);
       renderTable(result);
@@ -403,45 +326,34 @@
       const file = event.target.files[0];
       if (!file) return;
       els.fileName.textContent = file.name;
-
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-      const headers = Object.keys(json[0] || {});
-
-      const col = {
-        isin: findColumn(headers, 'isin'),
-        name: findColumn(headers, 'name'),
-        market: findColumn(headers, 'market'),
-        direction: findColumn(headers, 'direction'),
-        date: findColumn(headers, 'date'),
-        qty: findColumn(headers, 'qty'),
-        price: findColumn(headers, 'price'),
-        commission: findColumn(headers, 'commission'),
-        currency: findColumn(headers, 'currency')
-      };
-
-      rows = json.map(item => ({
-        isin: col.isin ? item[col.isin] : '',
-        name: col.name ? item[col.name] : '',
-        market: col.market ? item[col.market] : '',
-        direction: col.direction ? item[col.direction] : '',
-        date: col.date ? item[col.date] : '',
-        qty: parseNumber(col.qty ? item[col.qty] : 0),
-        price: parseNumber(col.price ? item[col.price] : 0),
-        commission: parseNumber(col.commission ? item[col.commission] : 0),
-        currency: col.currency ? item[col.currency] : ''
-      })).filter(r => r.isin || r.name || r.qty);
-
-      els.metricRows.textContent = rows.length;
-      els.calcBtn.disabled = rows.length === 0;
+      els.calcBtn.disabled = true;
       renderErrors([]);
       renderTable([]);
+      try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+        const parsed = readWorkbook(workbook);
+        rows = parsed.rows;
+        els.metricRows.textContent = rows.length;
+        els.metricInstruments.textContent = new Set(rows.map(r => r.isin || r.name).filter(Boolean)).size;
+        els.metricPnl.textContent = '0';
+        els.calcBtn.disabled = rows.length === 0;
+        renderDiagnostic(parsed.diagnostics);
+        renderErrors(parsed.warnings);
+        if (rows.length > 0) {
+          renderTable(rows.slice(0, 30).map(r => ({...r, cost: null, sale: null, pnl: null, balance: 0})));
+        } else {
+          renderTable([]);
+        }
+      } catch (e) {
+        rows = [];
+        els.metricRows.textContent = '0';
+        els.calcBtn.disabled = true;
+        renderErrors([`Ошибка чтения файла: ${e.message}`]);
+      }
     });
 
     els.calcBtn.addEventListener('click', calculateFifo);
-
     els.resetBtn.addEventListener('click', () => {
       rows = [];
       els.fileInput.value = '';
@@ -450,6 +362,7 @@
       els.metricRows.textContent = '0';
       els.metricInstruments.textContent = '0';
       els.metricPnl.textContent = '0';
+      els.diagnosticCard.style.display = 'none';
       renderErrors([]);
       renderTable([]);
     });
