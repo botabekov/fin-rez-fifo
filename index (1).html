@@ -1,0 +1,4113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Финансовый анализ (FIFO + KZT Eq)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      
+      --warning: #ca8a04;
+      --warning-bg: #fefce8;
+      
+      --text-main: #1e293b;
+      --text-secondary: #64748b;
+      --text-disabled: #94a3b8;
+      
+      --border: #e2e8f0;
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      
+      --radius: 6px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+
+    * { box-sizing: border-box; }
+    
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .app {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* === HEADER / TOOLBAR === */
+    .toolbar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      z-index: 20;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-right: 10px;
+      border-right: 1px solid var(--border);
+    }
+    .toolbar-group:last-child { border-right: none; margin-left: auto; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      font-weight: 500;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .btn:hover:not([disabled]) { background: #f1f5f9; border-color: #cbd5e1; }
+    .btn:active:not([disabled]) { transform: translateY(1px); }
+    
+    .btn[disabled] { 
+      opacity: 1; 
+      cursor: not-allowed; 
+      background: #f1f5f9 !important; 
+      color: var(--text-disabled) !important; 
+      border-color: #e2e8f0 !important;
+      box-shadow: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .btn-primary:hover:not([disabled]) { background: var(--primary-hover); border-color: var(--primary-hover); }
+
+    .btn-danger { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+    .btn-danger:hover:not([disabled]) { background: #fee2e2; }
+
+    .btn-success { background: var(--success-bg); color: var(--success); border-color: #bbf7d0; }
+    .btn-success:hover:not([disabled]) { background: #dcfce7; }
+
+    .btn-selected {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .source-actions { display: flex; gap: 6px; }
+
+    .file-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 150px;
+      max-width: 300px;
+    }
+    .file-label {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-secondary);
+      font-size: 11px;
+    }
+    .file-input { display: none; }
+
+    /* Updated Filter Styles */
+    .toolbar-filter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toolbar-filter label { font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+    .toolbar-filter select, .toolbar-filter input[type="date"] {
+      padding: 4px 8px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      outline: none;
+      font-size: 12px;
+      color: var(--text-main);
+      font-family: inherit;
+    }
+    .toolbar-filter input[type="date"]:disabled {
+        background: #f1f5f9;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+    .custom-date-range {
+      display: none; 
+      align-items: center;
+      gap: 4px;
+    }
+    .custom-date-range.active {
+      display: flex;
+    }
+
+    .hint-container { display: flex; gap: 6px; }
+    .hint-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: #f1f5f9;
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .dot-yellow { background: #facc15; box-shadow: 0 0 0 1px #eab308; }
+    .dot-red { background: #ef4444; box-shadow: 0 0 0 1px #dc2626; }
+
+    .meta-bar {
+      background: var(--bg-body);
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .meta-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      padding: 6px 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .meta-card label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .meta-card input {
+      border: none;
+      background: transparent;
+      font-weight: 600;
+      color: var(--text-main);
+      font-size: 13px;
+      width: 100%;
+      outline: none;
+      font-family: inherit;
+      border-radius: 4px;
+    }
+    .meta-card input::placeholder { color: #cbd5e1; }
+
+    /* !!! Стили для редактируемых полей !!! */
+    #meta-fio {
+        transition: background-color 0.2s, box-shadow 0.2s;
+    }
+    #meta-fio[readonly] {
+        cursor: pointer;
+    }
+    #meta-fio[readonly]:hover {
+        background-color: #f1f5f9;
+        box-shadow: 0 0 0 1px #cbd5e1;
+    }
+    #meta-fio:not([readonly]) {
+        background-color: #ffffff;
+        box-shadow: 0 0 0 2px var(--primary);
+        cursor: text;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 2px;
+      padding: 0 16px;
+      background: var(--bg-body);
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover:not([disabled]) { color: var(--primary); background: rgba(37, 99, 235, 0.05); }
+    .tab-btn-active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+    .tab-btn[disabled] { opacity: 0.4; cursor: default; }
+
+    .tab-content {
+      flex: 1;
+      display: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .tab-content-active { display: flex; }
+    
+    .fi-layout {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    .nav-panel {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+    
+    .nav-stats {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      background: #f8fafc;
+    }
+    .nav-stat { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; cursor: help;}
+
+    .nav-header {
+      padding: 8px 10px;
+      background: #f1f5f9;
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .nav-list {
+      flex: 1;
+      overflow-y: auto;
+      scroll-behavior: smooth; /* Плавный скролл для меню */
+    }
+    .nav-item {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+      border-left: 3px solid transparent; /* Подготовка под активный статус */
+    }
+    .nav-item:hover { background: var(--primary-light); color: var(--primary); }
+    
+    /* --- АКТИВНЫЙ ЭЛЕМЕНТ (SCROLLSPY) --- */
+    .nav-item.active {
+        background: var(--primary-light);
+        border-left-color: var(--primary);
+        color: var(--primary);
+        font-weight: 700;
+        box-shadow: inset 2px 0 0 0 var(--primary);
+    }
+    
+    .nav-item-yellow { background: #fffbeb; border-left: 3px solid #facc15; }
+    .nav-item-red { background: #fef2f2; border-left: 3px solid #ef4444; }
+
+    /* --- NEW NAV COLORS (Ваши цвета) --- */
+    .nav-item-edited-red { background: #E5CCFF !important; border-left: 3px solid #a855f7 !important; color: #6b21a8 !important; }
+    .nav-item-edited-yellow { background: #CCE5FF !important; border-left: 3px solid #3b82f6 !important; color: #1e40af !important; }
+
+    .nav-info-badge {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #fef9c3; color: #854d0e; border: 1px solid #fde047;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: bold;
+    }
+    .nav-info-badge-static {
+        position: static; transform: none; display: inline-flex;
+    }
+
+    .table-viewport {
+      flex: 1;
+      overflow: auto;
+      padding: 12px;
+      background: var(--bg-body);
+      position: relative;
+      scroll-behavior: smooth; /* Плавный скролл для контента */
+    }
+
+    .table-wrapper {
+      background: var(--bg-surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+      overflow: hidden; 
+      /* Для корректной работы ScrollSpy привязки */
+      scroll-margin-top: 10px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      table-layout: auto;
+    }
+    
+    .data-table th, .data-table td {
+      padding: 3px 5px;
+      border: 1px solid var(--border);
+      vertical-align: middle;
+      line-height: 1.2;
+      white-space: normal;
+      word-wrap: break-word;
+      text-align: center;
+    }
+    
+    .data-table td:nth-child(3), .data-table th:nth-child(3) {
+        max-width: 180px;
+        min-width: 100px;
+    }
+
+    .cell-isin { font-family: monospace; letter-spacing: -0.5px; }
+
+    .data-table th {
+      background: #f8fafc;
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 9px;
+      letter-spacing: 0.02em;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      
+      vertical-align: top; 
+      text-align: center;
+    }
+    
+    .calc-col {
+      background: #eff6ff !important;
+      font-weight: 600;
+      color: #1e3a8a; 
+      border-color: #dbeafe !important;
+    }
+
+    /* Колонки расчета с учетом комиссии выделяем желтым, чтобы визуально отличать от расчета без комиссии */
+    .commission-col {
+      background: #fef9c3 !important;
+      color: #713f12 !important;
+      border-color: #fde68a !important;
+      font-weight: 700;
+    }
+    .data-table th.commission-col {
+      background: #fef08a !important;
+      color: #713f12 !important;
+    }
+    
+    .cell-edit-red { background: #fef2f2; border: 1px dashed var(--danger); cursor: text; }
+    .cell-edit-yellow { background: #fefce8; border: 1px dashed var(--warning); cursor: text; }
+
+    .cell-readonly {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    
+    .cell-edited-red { background: #eff6ff; color: var(--primary); font-weight: 600; }
+    .cell-edited-yellow { background: #eff6ff; color: var(--primary); font-weight: 600; }
+
+    .cell-edit-name { cursor: text; transition: background 0.2s; }
+    .cell-edit-name:hover { background: #fff7ed; }
+    
+    /* Стили для редактируемых ячеек ПЕРЕВОДА */
+    .cell-edit-transfer { cursor: text; transition: background 0.2s; }
+    .cell-edit-transfer:hover { background: #fff7ed; }
+
+    .cell-edit-name[contenteditable="true"],
+    .cell-edit-transfer[contenteditable="true"],
+    [contenteditable="true"] {
+      background: #fff;
+      outline: 2px solid var(--primary);
+      box-shadow: var(--shadow-md);
+      z-index: 10;
+      padding: 4px 6px;
+    }
+
+    .market-highlight { border-bottom: 2px solid #facc15 !important; }
+
+    .warning-bar {
+      background: #fee2e2; color: #991b1b;
+      padding: 6px 12px; font-size: 11px; font-weight: 500;
+      border-bottom: 1px solid #fecaca;
+      text-align: center; display: none;
+    }
+
+    .local-warning {
+      margin: 8px; padding: 8px;
+      background: #fff1f2; border: 1px solid #fda4af;
+      color: #9f1239; border-radius: var(--radius);
+      font-size: 11px; display: flex; align-items: center; gap: 6px;
+    }
+    .local-note {
+      margin: 8px; padding: 8px;
+      background: #fffbeb; border: 1px solid #fcd34d;
+      color: #92400e; border-radius: var(--radius);
+      font-size: 11px;
+    }
+
+    .content-placeholder {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--text-secondary);
+      background: var(--bg-body);
+    }
+    .content-placeholder::before {
+      content: '📊'; font-size: 32px; margin-bottom: 12px; opacity: 0.5;
+    }
+
+    .simple-table-container {
+      width: 100%; height: 100%; overflow: auto; padding: 16px;
+    }
+    .sub-upload-panel {
+      background: var(--bg-surface);
+      padding: 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      font-size: 12px;
+    }
+
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .modal {
+      background: var(--bg-surface);
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+      width: 100%; max-width: 480px;
+      padding: 24px;
+      border: 1px solid var(--border);
+    }
+    .modal-title {
+      font-size: 16px; font-weight: 700; color: var(--text-main);
+      margin-bottom: 16px; text-align: center;
+    }
+    .modal-field input {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: 14px; outline: none;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+    .modal-field input:focus { border-color: var(--primary); ring: 2px solid var(--primary-light); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+   /* Оверлей под выезжающее меню */
+.nav-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: none;
+  z-index: 55;
+}
+
+/* Кнопка "Инструменты" на десктопе скрыта */
+#nav-toggle-btn{ display: none; }
+
+@media (max-width: 1100px) {
+  .meta-grid { grid-template-columns: 1fr; }
+}
+
+/* Мобилка */
+@media (max-width: 820px) {
+  body { font-size: 14px; }
+
+  .toolbar{
+    position: sticky;
+    top: 0;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .toolbar-group{
+    width: 100%;
+    border-right: none;
+    padding-right: 0;
+    flex-wrap: wrap;
+  }
+  .toolbar-group:last-child{ margin-left: 0; }
+
+  .btn{
+    min-height: 40px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .file-wrapper{
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .toolbar-filter{
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .toolbar-filter select,
+  .toolbar-filter input[type="date"]{
+    min-height: 40px;
+    font-size: 13px;
+  }
+
+  /* На мобилке показываем кнопку открытия меню */
+  #nav-toggle-btn{ display: inline-flex; }
+
+  /* Tabs: горизонтальный скролл */
+  .tabs{
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-btn{
+    white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  /* Меню инструментов превращаем в выезжающую панель */
+  .fi-layout{ position: relative; }
+
+  .nav-panel{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(82vw, 340px);
+    transform: translateX(-110%);
+    transition: transform 0.2s ease;
+    z-index: 60;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  .nav-panel.open{
+    transform: translateX(0);
+  }
+
+  .nav-overlay.open{ display: block; }
+
+  .table-viewport{
+    padding: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table{ font-size: 12px; }
+  .data-table th{ font-size: 10px; }
+  .data-table th, .data-table td{
+    padding: 6px 6px;
+  }
+
+  .table-wrapper{
+    scroll-margin-top: 140px;
+  }
+}
+
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="app">
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <div class="source-actions">
+        <button class="btn" id="upload-btn" type="button">Excel файл</button>
+        <button class="btn" id="hs-btn" type="button">API / HS</button>
+      </div>
+      <input id="file-input" class="file-input" type="file" accept=".xlsx,.xls,.csv" />
+      <div class="file-wrapper">
+         <span class="file-label" id="file-label">Файл не выбран</span>
+      </div>
+    </div>
+
+    <div class="toolbar-group">
+      <button class="btn btn-primary" id="process-btn" type="button" disabled>Рассчитать</button>
+      <button class="btn btn-danger" id="reset-btn" type="button" disabled>Сброс</button>
+      <button class="btn btn-success" id="export-btn" type="button" disabled>Экспорт</button>
+    </div>
+
+    <div class="toolbar-group">
+      <div class="toolbar-filter">
+        <label for="year-filter">Период:</label>
+        <select id="year-filter" disabled>
+          <option value="all">Все доступные годы</option>
+        </select>
+        
+        <div id="custom-date-range" class="custom-date-range">
+          <input type="date" id="date-from" title="Дата с" />
+          <span>—</span>
+          <input type="date" id="date-to" title="Дата по" disabled />
+        </div>
+      </div>
+      
+      <button class="btn" id="nav-toggle-btn" type="button" title="Список инструментов">
+        ☰ Инструменты
+      </button>
+
+      <button class="btn" id="year-report-btn" type="button" disabled title="Сформировать печатную форму">
+        1. Фин рез РК
+      </button>
+      <button class="btn" id="year-report-commission-btn" type="button" disabled title="Сформировать финрез по всем рынкам с учетом комиссии">
+        2. Фин рез все рынки расчет с комиссии
+      </button>
+      <button class="btn" id="year-report-no-commission-btn" type="button" disabled title="Сформировать финрез по всем рынкам без учета комиссии">
+        3. Фин рез все рынки расчет без комиссии
+      </button>
+
+      <div class="hint-container">
+        <span class="hint-pill" title="Цена подозрительная">
+          <span class="dot dot-yellow"></span> Ред.
+        </span>
+        <span class="hint-pill" title="Цена отсутствует или ошибка">
+          <span class="dot dot-red"></span> Ошибка
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="meta-bar">
+    <div class="meta-grid">
+      <div class="meta-card">
+        <label for="meta-fio">Клиент</label>
+        <input id="meta-fio" type="text" placeholder="—" readonly title="Двойной клик для редактирования" />
+      </div>
+      <div class="meta-card">
+        <label for="meta-account">Брокерский счет</label>
+        <input id="meta-account" type="text" placeholder="—" readonly />
+      </div>
+      <div class="meta-card">
+        <label for="meta-asof">Дата формирования</label>
+        <input id="meta-asof" type="text" placeholder="—" readonly />
+      </div>
+    </div>
+  </div>
+
+  <div id="warning-bar" class="warning-bar"></div>
+
+  <div class="content">
+    <div class="tabs">
+      <button class="tab-btn tab-btn-active" id="tab-btn-fi" data-tab="fi">Движение инструментов</button>
+      <button class="tab-btn" id="tab-btn-dividends" data-tab="dividends" disabled>Дивиденды</button>
+      <button class="tab-btn" id="tab-btn-repo" data-tab="repo" disabled>РЕПО</button>
+      <button class="tab-btn" id="tab-btn-cb" data-tab="cb" disabled>Остатки ЦБ</button>
+    </div>
+
+    <div id="tab-fi" class="tab-content tab-content-active" data-tab="fi">
+      <div class="fi-layout">
+        <div class="nav-overlay" id="nav-overlay"></div>
+
+        <div id="nav-panel" class="nav-panel">
+          <div class="nav-stats" id="nav-stats">
+            <div class="nav-stat" title="Требуют проверки">
+              <span class="dot dot-yellow"></span>
+              <span id="nav-yellow-count">0</span>
+            </div>
+            <div class="nav-stat" title="Критические ошибки">
+              <span class="dot dot-red"></span>
+              <span id="nav-red-count">0</span>
+            </div>
+            <div class="nav-stat" title="Инфо">
+              <span class="nav-info-badge nav-info-badge-static">i</span>
+              <span id="nav-info-count">0</span>
+            </div>
+          </div>
+          <div class="nav-header">
+            <span class="nav-title">Инструменты</span>
+            <span id="nav-count">0</span>
+          </div>
+          <div id="nav-list" class="nav-list"></div>
+        </div>
+
+        <div id="table-container" class="table-viewport">
+          <div id="tables-wrapper"></div>
+          <div class="content-placeholder" id="placeholder">
+            <div>Загрузите файл или выберите источник данных</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-dividends" class="tab-content" data-tab="dividends">
+      <div class="simple-table-container">
+        <div class="sub-upload-panel" id="dividends-upload-panel">
+          <div>
+            <strong>Нет данных о дивидендах.</strong><br>
+            <span style="font-size:10px; color:#64748b;">Загрузите файл если требуется.</span>
+          </div>
+          <label class="btn" for="dividends-file-input">Обзор...</label>
+          <input id="dividends-file-input" class="file-input" type="file" accept=".xlsx,.xls,.csv" />
+          <span class="file-label" id="dividends-file-label" style="max-width:120px;">...</span>
+          <button class="btn btn-primary" id="dividends-process-btn" type="button" disabled>Добавить</button>
+        </div>
+        <div class="table-wrapper" style="border:none; box-shadow:none;">
+           <table id="dividends-table" class="data-table"></table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-repo" class="tab-content" data-tab="repo">
+      <div class="simple-table-container">
+        <div class="sub-upload-panel" id="repo-upload-panel">
+          <div>
+              <strong>Нет данных РЕПО.</strong><br>
+              <span style="font-size:10px; color:#64748b;">Загрузите файл.</span>
+          </div>
+          <label class="btn" for="repo-file-input">Обзор...</label>
+          <input id="repo-file-input" class="file-input" type="file" accept=".xlsx,.xls,.csv" />
+          <span class="file-label" id="repo-file-label" style="max-width:120px;">...</span>
+          <button class="btn btn-primary" id="repo-process-btn" type="button" disabled>Добавить</button>
+        </div>
+        <div class="table-wrapper" style="border:none; box-shadow:none;">
+          <table id="repo-table" class="data-table"></table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-cb" class="tab-content" data-tab="cb">
+      <div class="simple-table-container">
+        <div class="sub-upload-panel" id="cb-upload-panel">
+          <div>
+              <strong>Нет данных об остатках.</strong>
+          </div>
+          <label class="btn" for="cb-file-input">Обзор...</label>
+          <input id="cb-file-input" class="file-input" type="file" accept=".xlsx,.xls,.csv" />
+          <span class="file-label" id="cb-file-label" style="max-width:120px;">...</span>
+          <button class="btn btn-primary" id="cb-process-btn" type="button" disabled>Добавить</button>
+        </div>
+        <div class="table-wrapper" style="border:none; box-shadow:none;">
+          <table id="cb-table" class="data-table"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="hs-modal">
+  <div class="modal">
+    <div class="modal-title">Запрос данных HS</div>
+    <div style="margin-bottom:16px; font-size:13px; color:#64748b; text-align:center;">
+      Введите номер брокерского счета для получения данных напрямую.
+    </div>
+    <div class="modal-field">
+      <input id="hs-account-input" type="text" placeholder='Пример, "Брокерский счёт: 10281G6***"' />
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="hs-cancel-btn" type="button">Отмена</button>
+      <button class="btn btn-primary" id="hs-process-btn" type="button">Загрузить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+    window.addEventListener('DOMContentLoaded', function () {
+      (function () {
+
+        // ---- DOM ----
+        const uploadBtn     = document.getElementById('upload-btn');
+        const hsBtn         = document.getElementById('hs-btn');
+
+        const fileInput     = document.getElementById('file-input');
+        const fileLabel     = document.getElementById('file-label');
+        const processBtn    = document.getElementById('process-btn');
+        const resetBtn      = document.getElementById('reset-btn');
+        const exportBtn     = document.getElementById('export-btn');
+        const placeholder   = document.getElementById('placeholder');
+        const tableContainer = document.getElementById('table-container');
+        const tablesWrapper  = document.getElementById('tables-wrapper');
+        const navList        = document.getElementById('nav-list');
+        const navCount       = document.getElementById('nav-count');
+        const navPanel       = document.getElementById('nav-panel');
+const navToggleBtn   = document.getElementById('nav-toggle-btn');
+const navOverlay     = document.getElementById('nav-overlay');
+
+const isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
+function openNav(){
+  if (!navPanel || !navOverlay) return;
+  navPanel.classList.add('open');
+  navOverlay.classList.add('open');
+}
+function closeNav(){
+  if (!navPanel || !navOverlay) return;
+  navPanel.classList.remove('open');
+  navOverlay.classList.remove('open');
+}
+
+if (navToggleBtn) navToggleBtn.addEventListener('click', () => {
+  if (!navPanel) return;
+  navPanel.classList.contains('open') ? closeNav() : openNav();
+});
+if (navOverlay) navOverlay.addEventListener('click', closeNav);
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeNav();
+});
+
+        
+        // Фильтры
+        const yearFilter     = document.getElementById('year-filter');
+        const customDateRangeDiv = document.getElementById('custom-date-range');
+        const dateFromInput  = document.getElementById('date-from');
+        const dateToInput    = document.getElementById('date-to');
+
+        const warningBar     = document.getElementById('warning-bar');
+
+        const metaFio     = document.getElementById('meta-fio');
+        const metaAccount = document.getElementById('meta-account');
+        const metaAsOf    = document.getElementById('meta-asof');
+
+        // NEW: Логика редактирования поля Клиент (ФИО)
+        if (metaFio) {
+            metaFio.addEventListener('dblclick', function() {
+                this.removeAttribute('readonly');
+                this.focus();
+                this.select();
+            });
+            metaFio.addEventListener('blur', function() {
+                this.setAttribute('readonly', true);
+            });
+            metaFio.addEventListener('keydown', function(e) {
+                if(e.key === 'Enter') {
+                    this.setAttribute('readonly', true);
+                    this.blur();
+                }
+            });
+        }
+
+        const navYellowCountEl = document.getElementById('nav-yellow-count');
+        const navRedCountEl    = document.getElementById('nav-red-count');
+        const navInfoCountEl   = document.getElementById('nav-info-count');
+
+        const yearReportBtn  = document.getElementById('year-report-btn');
+        const yearReportCommissionBtn = document.getElementById('year-report-commission-btn');
+        const yearReportNoCommissionBtn = document.getElementById('year-report-no-commission-btn');
+
+        const dividendsTable = document.getElementById('dividends-table');
+        const repoTable      = document.getElementById('repo-table');
+        const cbTable        = document.getElementById('cb-table');
+
+        const dividendsUploadPanel = document.getElementById('dividends-upload-panel');
+        const repoUploadPanel      = document.getElementById('repo-upload-panel');
+        const cbUploadPanel        = document.getElementById('cb-upload-panel');
+
+        const dividendsFileInput  = document.getElementById('dividends-file-input');
+        const dividendsFileLabel  = document.getElementById('dividends-file-label');
+        const dividendsProcessBtn = document.getElementById('dividends-process-btn');
+
+        const repoFileInput  = document.getElementById('repo-file-input');
+        const repoFileLabel  = document.getElementById('repo-file-label');
+        const repoProcessBtn = document.getElementById('repo-process-btn');
+
+        const cbFileInput  = document.getElementById('cb-file-input');
+        const cbFileLabel  = document.getElementById('cb-file-label');
+        const cbProcessBtn = document.getElementById('cb-process-btn');
+
+        const tabButtons  = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const tabBtnDividends = document.getElementById('tab-btn-dividends');
+        const tabBtnRepo      = document.getElementById('tab-btn-repo');
+        const tabBtnCb        = document.getElementById('tab-btn-cb');
+
+        // HS modal
+        const hsModal        = document.getElementById('hs-modal');
+        const hsAccountInput = document.getElementById('hs-account-input');
+        const hsCancelBtn    = document.getElementById('hs-cancel-btn');
+        const hsProcessBtn   = document.getElementById('hs-process-btn');
+
+        if (!fileInput || !fileLabel || !processBtn || !resetBtn || !exportBtn) {
+          console.error('Не найдены основные элементы интерфейса.');
+          return;
+        }
+
+        // ---- State ----
+        let sourceMode = null; // null | 'excel' | 'hs'
+        let selectedFile       = null;  // Excel
+        let fullData           = null;
+        let lastData           = null;
+        let currentEditingCell = null;
+        let editedCells        = new Map(); // Key: "r-c", Value: "red" | "yellow"
+
+        let dividendsData      = null;
+        let repoData           = null;
+        let cbData             = null;
+        let cbAsOfDate         = '';
+
+        let dividendsDataFull  = null;
+        let repoDataFull       = null;
+
+        let dividendsSelectedFile = null;
+        let repoSelectedFile      = null;
+        let cbSelectedFile        = null;
+
+        let colPriceIndex        = null;
+        let colCoeffIndex        = null;
+        let colIsinIndex         = null;
+        let colQtyIndex          = null;
+        let colCostIndex         = null;
+        let colSaleAmountIndex   = null;
+        let colProfitIndex       = null;
+        let colCostWithCommissionIndex = null;
+        let colSaleAmountWithCommissionIndex = null;
+        let colProfitWithCommissionIndex = null;
+        let colBalanceQtyIndex   = null;
+        let colBalanceCostIndex  = null;
+        let colAvgCostIndex      = null;
+        let colBalanceCostWithCommissionIndex = null;
+        let colAvgCostWithCommissionIndex = null;
+        let colDateIndex         = null;
+        let colMarketIndex       = null;
+        
+        // !!! НОВЫЙ ИНДЕКС !!!
+        let colProfitKztIndex    = null; 
+        let colCommissionIndex   = null;
+
+        // !!! ИНДЕКСЫ ДЛЯ ПЕРЕВОДОВ !!!
+        let colTransferFromIndex = null;
+        let colTransferToIndex   = null;
+
+        let colNameIndex         = null;
+        let colTypeIndex         = null;
+        let colCurrencyIndex     = null;
+        let colDirectionIndex    = null;
+        let colCountryIndex      = null;
+
+        let missingArrivalKeys   = new Set();
+        let hasMissingTicker     = false;
+
+        let navYellowCount = 0;
+        let navRedCount    = 0;
+        let navInfoCount   = 0;
+        
+        let scrollObserver = null; // Наблюдатель за скроллом
+
+        function updateNavStats() {
+          if (navYellowCountEl) navYellowCountEl.textContent = navYellowCount;
+          if (navRedCountEl)    navRedCountEl.textContent    = navRedCount;
+          if (navInfoCountEl)   navInfoCountEl.textContent   = navInfoCount;
+        }
+
+        // ---- Source mode lock (Excel vs HS) ----
+        function setSourceMode(mode) {
+          sourceMode = mode; // фиксируем выбор до reset
+
+          const isExcel = mode === 'excel';
+          const isHs = mode === 'hs';
+
+          // Устанавливаем визуальный стиль "выбрано"
+          if (uploadBtn) uploadBtn.classList.toggle('btn-selected', isExcel);
+          if (hsBtn)     hsBtn.classList.toggle('btn-selected', isHs);
+          
+          updateButtonsState();
+        }
+
+        function resetMeta() {
+          if (metaFio) metaFio.value = '';
+          if (metaAccount) metaAccount.value = '';
+          if (metaAsOf) metaAsOf.value = '';
+        }
+
+        function setMeta(info) {
+          if (!info) { resetMeta(); return; }
+          if (metaFio) metaFio.value = info.fio || '';
+          if (metaAccount) metaAccount.value = info.account || '';
+          if (metaAsOf) metaAsOf.value = info.asOf || '';
+        }
+
+        // ---- Tabs ----
+        function switchTab(name) {
+          tabButtons.forEach(btn => {
+            const isActive = btn.dataset.tab === name;
+            btn.classList.toggle('tab-btn-active', isActive);
+          });
+          tabContents.forEach(cont => {
+            const isActive = cont.dataset.tab === name;
+            cont.classList.toggle('tab-content-active', isActive);
+          });
+        }
+        tabButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+            switchTab(btn.dataset.tab);
+          });
+        });
+
+        // ---- Warnings ----
+        function hideWarning() {
+          if (!warningBar) return;
+          warningBar.style.display = 'none';
+          warningBar.textContent = '';
+        }
+        function showWarning(text) {
+          if (!warningBar) return;
+          warningBar.textContent = text;
+          warningBar.style.display = 'block';
+        }
+
+        function updateYearReportButtonState() {
+          const hasData = !!lastData && lastData.length > 1;
+          const disabled = !hasData || !yearFilter || ((yearFilter.value || 'all') === 'portfolio');
+          if (yearReportBtn) yearReportBtn.disabled = disabled;
+          if (yearReportCommissionBtn) yearReportCommissionBtn.disabled = disabled;
+          if (yearReportNoCommissionBtn) yearReportNoCommissionBtn.disabled = disabled;
+        }
+
+        function updateButtonsState() {
+          const hasFile = !!selectedFile;
+          const hasData = !!lastData && lastData.length > 1;
+
+          if (hasData) {
+            if (uploadBtn) uploadBtn.disabled = true;
+            if (hsBtn) hsBtn.disabled = true;
+            if (processBtn) processBtn.disabled = true;
+          } else {
+            const isExcel = sourceMode === 'excel';
+            const isHs = sourceMode === 'hs';
+
+            if (uploadBtn) uploadBtn.disabled = isHs;   
+            if (hsBtn) hsBtn.disabled = isExcel;        
+
+            if (processBtn) processBtn.disabled = !hasFile;
+          }
+
+          resetBtn.disabled    = !hasFile && !hasData; 
+          exportBtn.disabled   = !hasData;                   
+          updateYearReportButtonState();
+        }
+
+        function updateSubUploadButtonsState() {
+          if (dividendsProcessBtn) dividendsProcessBtn.disabled = !dividendsSelectedFile;
+          if (repoProcessBtn)      repoProcessBtn.disabled      = !repoSelectedFile;
+          if (cbProcessBtn)        cbProcessBtn.disabled        = !cbSelectedFile;
+        }
+
+        // ---- File picker by button ----
+        if (uploadBtn) {
+          uploadBtn.addEventListener('click', () => {
+            if (uploadBtn.disabled) return;
+            fileInput.click();
+          });
+        }
+
+        fileInput.addEventListener('change', () => {
+          const file = fileInput.files[0];
+          if (file) {
+            selectedFile = file;
+            fileLabel.textContent = file.name;
+
+            if (!sourceMode) setSourceMode('excel'); 
+          } else {
+            selectedFile = null;
+            fileLabel.textContent = 'Файл не выбран';
+          }
+          updateButtonsState();
+        });
+
+        if (dividendsFileInput) {
+          dividendsFileInput.addEventListener('change', () => {
+            const f = dividendsFileInput.files[0];
+            dividendsSelectedFile = f || null;
+            dividendsFileLabel.textContent = f ? f.name : '...';
+            updateSubUploadButtonsState();
+          });
+        }
+        if (repoFileInput) {
+          repoFileInput.addEventListener('change', () => {
+            const f = repoFileInput.files[0];
+            repoSelectedFile = f || null;
+            repoFileLabel.textContent = f ? f.name : '...';
+            updateSubUploadButtonsState();
+          });
+        }
+        if (cbFileInput) {
+          cbFileInput.addEventListener('change', () => {
+            const f = cbFileInput.files[0];
+            cbSelectedFile = f || null;
+            cbFileLabel.textContent = f ? f.name : '...';
+            updateSubUploadButtonsState();
+          });
+        }
+
+        const handleSubProcess = (file, type) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[firstSheetName];
+
+                    if (type === 'dividends') {
+                        dividendsDataFull = normalizeDividendsTable(extractSimpleTableFromSheet(sheet));
+                        applyYearFilterToDividendsAndRepo(yearFilter.value || 'all');
+                        if (dividendsDataFull && dividendsDataFull.length > 1) {
+                            dividendsUploadPanel.style.display = 'none';
+                        }
+                    } else if (type === 'repo') {
+                        repoDataFull = normalizeRepoTable(extractSimpleTableFromSheet(sheet));
+                        applyYearFilterToDividendsAndRepo(yearFilter.value || 'all');
+                        if (repoDataFull && repoDataFull.length > 1) {
+                            repoUploadPanel.style.display = 'none';
+                        }
+                    } else if (type === 'cb') {
+                        cbData = extractSimpleTableFromSheet(sheet);
+                        cbAsOfDate = extractCbAsOfDateFromSheet(sheet);
+                        renderSimpleTable(cbTable, cbData, { asOfDate: cbAsOfDate });
+                        if (cbData && cbData.length > 1) {
+                            cbUploadPanel.style.display = 'none';
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Ошибка при чтении файла');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        if (dividendsProcessBtn) {
+            dividendsProcessBtn.addEventListener('click', () => {
+                if (dividendsSelectedFile) handleSubProcess(dividendsSelectedFile, 'dividends');
+            });
+        }
+        if (repoProcessBtn) {
+            repoProcessBtn.addEventListener('click', () => {
+                if (repoSelectedFile) handleSubProcess(repoSelectedFile, 'repo');
+            });
+        }
+        if (cbProcessBtn) {
+            cbProcessBtn.addEventListener('click', () => {
+                if (cbSelectedFile) handleSubProcess(cbSelectedFile, 'cb');
+            });
+        }
+
+        // ---- Excel date/number helpers ----
+        function formatExcelDate(value) {
+          if (value instanceof Date) {
+            const d  = value;
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yy = d.getFullYear();
+            return dd + '.' + mm + '.' + yy;
+          }
+          const str = String(value ?? '').trim();
+          if (!str) return '';
+          const num = Number(str);
+          if (!Number.isNaN(num) && num > 20000 && num < 60000 && Math.round(num) === num) {
+            const excelEpoch = Date.UTC(1899, 11, 30);
+            const millis     = excelEpoch + num * 86400000;
+            const d          = new Date(millis);
+            const dd         = String(d.getUTCDate()).padStart(2, '0');
+            const mm         = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const yy         = d.getUTCFullYear();
+            return dd + '.' + mm + '.' + yy;
+          }
+          return str;
+        }
+
+        function parseNumber(value) {
+          const str = String(value ?? '').trim();
+          if (!str) return NaN;
+          const cleaned = str.replace(/\s/g, '').replace(',', '.');
+          const num = Number(cleaned);
+          return Number.isNaN(num) ? NaN : num;
+        }
+
+        function formatNumberComma(value, digits = 2) {
+          const num = typeof value === 'number' ? value : parseNumber(value);
+          if (num == null || Number.isNaN(num)) return '';
+          return num.toFixed(digits).replace('.', ',');
+        }
+
+        function extractTickerFromName(name) {
+          if (name == null) return '';
+          const str = String(name).trim();
+          if (!str) return '';
+          const parts = str.split(',');
+          return parts[0].trim();
+        }
+
+
+        // ИПИФ Halyk Finance, которые должны попадать в отчет "1. Фин рез РК" по паре ISIN + тикер
+        const HALYK_IPIF_WHITELIST = [
+          { name: 'ИПИФ «Halyk-Сбалансированный»', isin: 'KZPF00000520', ticker: 'HFINhsOTC' },
+          { name: 'ИПИФ «Halyk-Ликвидный»', isin: 'KZPF00000538', ticker: 'HFINhlOTC' },
+          { name: 'ИПИФ «Halyk-Валютный»', isin: 'KZPF00000041', ticker: 'HFINhvOTC' },
+          { name: 'ИПИФ «Halyk – Перспективные инвестиции»', isin: 'KZPF00000546', ticker: 'HFINhpOTC' },
+          { name: 'ИПИФ «Halyk Tenge»', isin: 'KZPF00000801', ticker: 'HFINhtOTC' },
+          { name: 'ИПИФ "Halyk Global"', isin: 'KZPF00000165', ticker: 'HKGMhgOTC' }
+        ];
+
+        function normTextForCompare(value) {
+          return String(value == null ? '' : value).trim().toUpperCase();
+        }
+
+        function isHalykIpifByIsinAndTicker(isinValue, nameOrTickerValue) {
+          const isin = normTextForCompare(isinValue);
+          if (!isin) return false;
+          const text = normTextForCompare(nameOrTickerValue);
+          const extractedTicker = normTextForCompare(extractTickerFromName(nameOrTickerValue));
+          return HALYK_IPIF_WHITELIST.some(item => {
+            const itemIsin = normTextForCompare(item.isin);
+            const itemTicker = normTextForCompare(item.ticker);
+            return isin === itemIsin && (extractedTicker === itemTicker || text.includes(itemTicker));
+          });
+        }
+
+        function isAllowedForRkFinrezReport(marketValue, isinValue, nameOrTickerValue) {
+          const market = normTextForCompare(marketValue);
+          if (market === 'KASE' || market === 'AIX') return true;
+          return isHalykIpifByIsinAndTicker(isinValue, nameOrTickerValue);
+        }
+
+        function convertDecimalDotsToCommasForColumns(data, columns) {
+          if (!data || data.length <= 1) return;
+          const rows = data.slice(1);
+          rows.forEach(row => {
+            columns.forEach(colIndex => {
+              if (colIndex == null || colIndex < 0) return;
+              const val = row[colIndex];
+              if (val == null || val === '') return;
+              const str = String(val);
+              if (str.indexOf('.') !== -1) {
+                row[colIndex] = str.replace('.', ',');
+              }
+            });
+          });
+        }
+
+        // ---- Extract FIO / Account / AsOf from sheet top ----
+        function normalizeKey(s){
+          return String(s ?? '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toUpperCase();
+        }
+
+        function findValueRight(rows, r, c){
+          const row = rows[r] || [];
+          for (let j = c + 1; j < row.length; j++){
+            const v = String(row[j] ?? '').trim();
+            if (v) return row[j];
+          }
+          // fallback: next row first non-empty
+          if (r + 1 < rows.length){
+            const nr = rows[r + 1] || [];
+            for (let j = 0; j < nr.length; j++){
+              const v = String(nr[j] ?? '').trim();
+              if (v) return nr[j];
+            }
+          }
+          return '';
+        }
+
+        function extractHeaderInfoFromFiSheet(sheet){
+          if (!sheet) return { fio:'', account:'', asOf:'' };
+
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+          if (!rows || !rows.length) return { fio:'', account:'', asOf:'' };
+
+          const maxR = Math.min(rows.length, 40);
+          const maxC = 30;
+
+          let fio = '';
+          let account = '';
+          let asOf = '';
+
+          for (let r = 0; r < maxR; r++){
+            const row = rows[r] || [];
+            const cMax = Math.min(row.length, maxC);
+            for (let c = 0; c < cMax; c++){
+              const cell = row[c];
+              const key = normalizeKey(cell);
+
+              if (!fio && key.includes('ФАМИЛИЯ') && key.includes('ИМЯ')) {
+                const v = findValueRight(rows, r, c);
+                let val = String(v ?? '').trim();
+                if (val.toUpperCase().includes('НОМЕР ЛИЦЕВОГО') || val.toUpperCase().includes('СЧЕТА')) {
+                  val = '';
+                }
+                fio = val;
+              }
+
+              if (!account && (key === 'НОМЕР ЛИЦЕВОГО СЧЕТА' || key.includes('НОМЕР ЛИЦЕВОГО СЧЕТА'))) {
+                const v = findValueRight(rows, r, c);
+                account = String(v ?? '').trim();
+              }
+
+              if (!asOf && (key === 'ПО СОСТОЯНИЮ НА' || key.startsWith('ПО СОСТОЯНИЮ НА'))) {
+                const v = findValueRight(rows, r, c);
+                asOf = formatExcelDate(v);
+              }
+
+              if (fio && account && asOf) break;
+            }
+            if (fio && account && asOf) break;
+          }
+
+          return { fio, account, asOf };
+        }
+
+        // ---- Missing arrival check ----
+        function computeMissingArrivalInfo(data, isinColIndex, qtyColIndex, nameColIndex) {
+          missingArrivalKeys = new Set();
+          hasMissingTicker   = false;
+          if (!data || data.length <= 1) return;
+          if (isinColIndex == null || isinColIndex < 0 ||
+              qtyColIndex  == null || qtyColIndex  < 0) return;
+
+          const rows = data.slice(1);
+          const useTicker = nameColIndex != null && nameColIndex >= 0;
+          const groups = new Map();
+
+          rows.forEach(row => {
+            const isin =
+              row[isinColIndex] !== undefined ? String(row[isinColIndex]).trim() : '';
+            if (!isin) return;
+
+            let ticker = '';
+            if (useTicker) {
+              const rawName = row[nameColIndex];
+              ticker = extractTickerFromName(rawName);
+              if (!ticker) hasMissingTicker = true;
+            }
+
+            const key = useTicker && ticker ? (isin + '||' + ticker) : isin;
+
+            let info = groups.get(key);
+            if (!info) {
+              info = { totalIn: 0, totalOut: 0 };
+              groups.set(key, info);
+            }
+
+            const qty = parseNumber(row[qtyColIndex]);
+            if (Number.isNaN(qty) || qty === 0) return;
+
+            if (qty > 0) info.totalIn += qty;
+            else          info.totalOut += Math.abs(qty);
+          });
+
+          for (const [key, info] of groups.entries()) {
+            if (info.totalOut > 0 && (info.totalIn <= 0 || info.totalIn < info.totalOut)) {
+              missingArrivalKeys.add(key);
+            }
+          }
+
+          if (hasMissingTicker) {
+            showWarning('По части строк не удалось определить тикер из столбца "Наименование (тип)". Ожидается формат: "TICKER, ...". Проверьте исходный отчёт.');
+          } else {
+            hideWarning();
+          }
+        }
+
+        function parseExcelDateStr(str) {
+            if (!str) return null;
+            const parts = String(str).trim().split('.');
+            if (parts.length !== 3) return null;
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+
+        function extractYearFromDateStr(value) {
+          if (value == null) return null;
+          const str = String(value).trim();
+          if (!str) return null;
+          const parts     = str.split('.');
+          const yearStr = parts[parts.length - 1];
+          const y         = parseInt(yearStr, 10);
+          return Number.isNaN(y) ? null : y;
+        }
+
+        function buildYearFilterOptions(data, dateColIndex) {
+          if (!yearFilter) return;
+          yearFilter.innerHTML = '';
+
+          const optAll = document.createElement('option');
+          optAll.value = 'all';
+          optAll.textContent = 'Все доступные годы';
+          yearFilter.appendChild(optAll);
+
+          if (!data || data.length <= 1 || dateColIndex == null || dateColIndex < 0) {
+            yearFilter.disabled = true;
+            return;
+          }
+
+          const yearsSet = new Set();
+          const rows = data.slice(1);
+          rows.forEach(row => {
+            const y = extractYearFromDateStr(row[dateColIndex]);
+            if (y != null) yearsSet.add(y);
+          });
+
+          const years = Array.from(yearsSet).sort();
+          years.forEach(y => {
+            const opt = document.createElement('option');
+            opt.value = String(y);
+            opt.textContent = String(y);
+            yearFilter.appendChild(opt);
+          });
+
+          // Add Custom Option
+          const optCustom = document.createElement('option');
+          optCustom.value = 'custom';
+          optCustom.textContent = 'Период с_по_...';
+          yearFilter.appendChild(optCustom);
+
+          // Add Portfolio Option at the bottom
+          const optPortfolio = document.createElement('option');
+          optPortfolio.value = 'portfolio';
+          optPortfolio.textContent = 'Остаток на сегодня';
+          yearFilter.appendChild(optPortfolio);
+
+          yearFilter.disabled = false;
+          yearFilter.value = 'all';
+        }
+
+        function filterRows(allRows) {
+            const filterValue = yearFilter.value;
+            
+            if (colDateIndex == null || colDateIndex < 0) return allRows;
+
+            if (filterValue === 'portfolio') {
+                return filterRowsByPortfolio(allRows);
+            }
+
+            if (filterValue === 'custom') {
+                const dFromStr = dateFromInput.value;
+                const dToStr = dateToInput.value;
+                
+                if (!dFromStr && !dToStr) return allRows;
+
+                const dFrom = dFromStr ? new Date(dFromStr) : new Date(-8640000000000000); 
+                const dTo = dToStr ? new Date(dToStr) : new Date(8640000000000000);
+                dTo.setHours(23, 59, 59, 999);
+
+                if (colIsinIndex == null || colIsinIndex < 0 || colQtyIndex == null || colQtyIndex < 0) {
+                    return allRows.filter(row => {
+                        const rDate = parseExcelDateStr(row[colDateIndex]);
+                        return rDate && rDate >= dFrom && rDate <= dTo;
+                    });
+                }
+
+                return filterRowsByDateRangeWithGrouping(allRows, dFrom, dTo);
+            }
+
+            if (filterValue !== 'all') {
+                const targetYear = parseInt(filterValue, 10);
+                if (!Number.isNaN(targetYear)) {
+                    return filterRowsByYear(allRows, targetYear);
+                }
+            }
+
+            return allRows;
+        }
+
+        function filterRowsByDateRangeWithGrouping(allRows, dFrom, dTo) {
+             const useTicker = colNameIndex != null && colNameIndex >= 0;
+             const groups = new Map();
+
+             allRows.forEach((row, idx) => {
+                const isinVal = row[colIsinIndex] !== undefined ? String(row[colIsinIndex]).trim() : '';
+                let tickerVal = '';
+                if (useTicker && row[colNameIndex] !== undefined) {
+                    tickerVal = extractTickerFromName(row[colNameIndex]);
+                }
+                const key = useTicker && tickerVal ? (isinVal + '||' + tickerVal) : isinVal;
+                const rDate = parseExcelDateStr(row[colDateIndex]);
+
+                if (!groups.has(key)) {
+                    groups.set(key, { rows: [], dates: [], idxs: [] });
+                }
+                const g = groups.get(key);
+                g.rows.push(row);
+                g.dates.push(rDate);
+                g.idxs.push(idx);
+             });
+
+             const includeFlags = new Array(allRows.length).fill(false);
+
+             groups.forEach(group => {
+                const rows = group.rows;
+                const dates = group.dates;
+                const idxs = group.idxs;
+
+                let runningQty = 0;
+                let lastDropIndexBeforeStart = -1;
+
+                for (let i = 0; i < rows.length; i++) {
+                    const q = parseNumber(rows[i][colQtyIndex]);
+                    if (!Number.isNaN(q)) runningQty += q;
+                    
+                    const d = dates[i];
+                    
+                    if (d && d < dFrom) {
+                       if (runningQty === 0) {
+                           lastDropIndexBeforeStart = i;
+                       }
+                    }
+                }
+
+                for(let i=0; i<rows.length; i++) {
+                    const d = dates[i];
+                    if (d) {
+                        if (d >= dFrom && d <= dTo) {
+                            includeFlags[idxs[i]] = true;
+                        } else if (d < dFrom && i > lastDropIndexBeforeStart) {
+                            includeFlags[idxs[i]] = true;
+                        }
+                    }
+                }
+             });
+
+             const result = [];
+             for(let i=0; i<allRows.length; i++) {
+                 if(includeFlags[i]) result.push(allRows[i]);
+             }
+             return result;
+        }
+
+        function filterRowsByYear(allRows, targetYear) {
+          if (colDateIndex == null || colDateIndex < 0) return allRows;
+
+          if (colIsinIndex == null || colIsinIndex < 0 ||
+              colQtyIndex  == null || colQtyIndex  < 0) {
+            return allRows.filter(row =>
+              extractYearFromDateStr(row[colDateIndex]) === targetYear
+            );
+          }
+
+          const useTicker = colNameIndex != null && colNameIndex >= 0;
+          const groups = new Map();
+
+          allRows.forEach((row, idx) => {
+            const isinVal =
+              row[colIsinIndex] !== undefined ? String(row[colIsinIndex]).trim() : '';
+
+            let tickerVal = '';
+            if (useTicker && row[colNameIndex] !== undefined) {
+              tickerVal = extractTickerFromName(row[colNameIndex]);
+            }
+
+            const key = useTicker && tickerVal ? (isinVal + '||' + tickerVal) : isinVal;
+
+            const year = extractYearFromDateStr(row[colDateIndex]);
+
+            if (!groups.has(key)) {
+              groups.set(key, { rows: [], years: [], idxs: [] });
+            }
+            const g = groups.get(key);
+            g.rows.push(row);
+            g.years.push(year);
+            g.idxs.push(idx);
+          });
+
+          const includeFlags = new Array(allRows.length).fill(false);
+
+          groups.forEach(group => {
+            const rows  = group.rows;
+            const years = group.years;
+            const idxs  = group.idxs;
+
+            const hasYearTxn = years.some(y => y === targetYear);
+            if (!hasYearTxn) return;
+
+            let runningQty = 0;
+            let lastDropIndex = -1;
+
+            for (let i = 0; i < rows.length; i++) {
+              const q = parseNumber(rows[i][colQtyIndex]);
+              if (!Number.isNaN(q)) runningQty += q;
+              const y = years[i];
+              if (y != null && y < targetYear && runningQty === 0) {
+                lastDropIndex = i;
+              }
+            }
+
+            const startIndex = lastDropIndex + 1;
+            for (let i = startIndex; i < rows.length; i++) {
+              const y = years[i];
+              if (y === targetYear || (y != null && y < targetYear)) {
+                includeFlags[idxs[i]] = true;
+              }
+            }
+          });
+
+          const result = [];
+          for (let i = 0; i < allRows.length; i++) {
+            if (includeFlags[i]) result.push(allRows[i]);
+          }
+          return result;
+        }
+
+        function filterRowsByPortfolio(allRows) {
+          if (colIsinIndex == null || colIsinIndex < 0 || colQtyIndex == null || colQtyIndex < 0) {
+            return allRows;
+          }
+
+          const useTicker = colNameIndex != null && colNameIndex >= 0;
+          const groups = new Map();
+
+          allRows.forEach((row, idx) => {
+            const isinVal =
+              row[colIsinIndex] !== undefined ? String(row[colIsinIndex]).trim() : '';
+
+            let tickerVal = '';
+            if (useTicker && row[colNameIndex] !== undefined) {
+              tickerVal = extractTickerFromName(row[colNameIndex]);
+            }
+
+            const key = useTicker && tickerVal ? (isinVal + '||' + tickerVal) : isinVal;
+
+            if (!groups.has(key)) {
+              groups.set(key, { rows: [], idxs: [] });
+            }
+            const g = groups.get(key);
+            g.rows.push(row);
+            g.idxs.push(idx);
+          });
+
+          const includeFlags = new Array(allRows.length).fill(false);
+
+          groups.forEach(group => {
+            const rows = group.rows;
+            const idxs = group.idxs;
+
+            let runningQty = 0;
+            let lastDropIndex = -1;
+
+            for (let i = 0; i < rows.length; i++) {
+              const q = parseNumber(rows[i][colQtyIndex]);
+              if (!Number.isNaN(q)) runningQty += q;
+              if (runningQty === 0) lastDropIndex = i;
+            }
+
+            if (runningQty === 0) return;
+
+            const startIndex = lastDropIndex + 1;
+            for (let i = startIndex; i < rows.length; i++) {
+              includeFlags[idxs[i]] = true;
+            }
+          });
+
+          const result = [];
+          for (let i = 0; i < allRows.length; i++) {
+            if (includeFlags[i]) result.push(allRows[i]);
+          }
+          return result;
+        }
+
+        function applyYearFilter() {
+          if (!fullData || fullData.length <= 1) return;
+          if (colPriceIndex == null || colIsinIndex == null || colQtyIndex == null) return;
+
+          const header  = fullData[0];
+          const allRows = fullData.slice(1);
+          
+          const rowsToUse = filterRows(allRows);
+
+          lastData = [header, ...rowsToUse];
+          renderTablesByIsin(
+            lastData,
+            colPriceIndex,
+            colCoeffIndex,
+            colIsinIndex,
+            colQtyIndex,
+            colCostIndex,
+            colSaleAmountIndex,
+            colProfitIndex,
+            colBalanceQtyIndex,
+            colBalanceCostIndex,
+            colAvgCostIndex,
+            colProfitKztIndex
+          );
+          updateButtonsState();
+        }
+
+        function filterSimpleTableByDateRange(fullTable, dateColumnTitle) {
+            const filterValue = yearFilter.value;
+            if (!fullTable || fullTable.length <= 1) return fullTable;
+            if (filterValue === 'all' || filterValue === 'portfolio') return fullTable;
+
+            const header = fullTable[0];
+            const dateIdx = header.findIndex(c => String(c).trim().toUpperCase() === dateColumnTitle.toUpperCase());
+            if (dateIdx === -1) return fullTable;
+
+            let dFrom = null;
+            let dTo = null;
+            let targetYear = null;
+
+            if (filterValue === 'custom') {
+                const dFromStr = dateFromInput.value;
+                const dToStr = dateToInput.value;
+                if (!dFromStr && !dToStr) return fullTable;
+                dFrom = dFromStr ? new Date(dFromStr) : new Date(-8640000000000000);
+                dTo = dToStr ? new Date(dToStr) : new Date(8640000000000000);
+                dTo.setHours(23,59,59,999);
+            } else {
+                targetYear = parseInt(filterValue, 10);
+                if (Number.isNaN(targetYear)) return fullTable;
+            }
+
+            const result = [header];
+            for (let i = 1; i < fullTable.length; i++) {
+                const row = fullTable[i];
+                const dateVal = row[dateIdx];
+                const rDate = parseExcelDateStr(dateVal);
+                
+                if (rDate) {
+                    if (targetYear !== null) {
+                        if (rDate.getFullYear() === targetYear) result.push(row);
+                    } else if (dFrom && dTo) {
+                        if (rDate >= dFrom && rDate <= dTo) result.push(row);
+                    }
+                }
+            }
+            return result;
+        }
+
+        function applyYearFilterToDividendsAndRepo() {
+          if (dividendsDataFull && dividendsTable) {
+            dividendsData = filterSimpleTableByDateRange(dividendsDataFull, 'ДАТА ТРАНЗАКЦИИ');
+            renderSimpleTable(dividendsTable, dividendsData);
+          }
+          if (repoDataFull && repoTable) {
+            repoData = filterSimpleTableByDateRange(repoDataFull, 'ДАТА ТРАНЗАКЦИИ');
+            renderSimpleTable(repoTable, repoData);
+          }
+        }
+
+        if (yearFilter) {
+          yearFilter.addEventListener('change', () => {
+            const val = yearFilter.value;
+            if (val === 'custom') {
+                customDateRangeDiv.classList.add('active');
+                dateToInput.disabled = !dateFromInput.value; 
+            } else {
+                customDateRangeDiv.classList.remove('active');
+                applyYearFilter();
+                applyYearFilterToDividendsAndRepo();
+                updateYearReportButtonState();
+            }
+          });
+        }
+
+        if (dateFromInput && dateToInput) {
+            dateToInput.disabled = true;
+
+            dateFromInput.addEventListener('change', () => {
+                if (dateFromInput.value) {
+                    dateToInput.disabled = false;
+                } else {
+                    dateToInput.disabled = true;
+                    dateToInput.value = '';
+                }
+            });
+
+            dateToInput.addEventListener('change', () => {
+                if (yearFilter.value === 'custom' && dateFromInput.value && dateToInput.value) {
+                    applyYearFilter();
+                    applyYearFilterToDividendsAndRepo();
+                    updateYearReportButtonState();
+                }
+            });
+        }
+
+        function renderSimpleTable(tableEl, dataTable, options = {}) {
+          if (!tableEl) return;
+          tableEl.innerHTML = '';
+          if (!dataTable || dataTable.length === 0) return;
+
+          const headerRow = dataTable[0];
+          const rowCount  = dataTable.length;
+
+          const visibleCols = [];
+          for (let col = 0; col < headerRow.length; col++) {
+            let hasData = false;
+            for (let r = 1; r < rowCount; r++) {
+              const val = dataTable[r][col];
+              if (val !== undefined && String(val).trim() !== '') {
+                hasData = true;
+                break;
+              }
+            }
+            if (hasData) visibleCols.push(col);
+          }
+          if (!visibleCols.length) return;
+
+          const thead = document.createElement('thead');
+
+          if (options.asOfDate) {
+            const infoTr = document.createElement('tr');
+            infoTr.className = 'cb-asof-row';
+            const th = document.createElement('th');
+            th.colSpan = visibleCols.length;
+            th.textContent = 'По состоянию на: ' + options.asOfDate;
+            infoTr.appendChild(th);
+            thead.appendChild(infoTr);
+          }
+
+          const headTr = document.createElement('tr');
+          visibleCols.forEach(colIndex => {
+            const th = document.createElement('th');
+            th.textContent = headerRow[colIndex];
+            headTr.appendChild(th);
+          });
+          thead.appendChild(headTr);
+
+          const tbody = document.createElement('tbody');
+          for (let i = 1; i < rowCount; i++) {
+            const tr = document.createElement('tr');
+            visibleCols.forEach(colIndex => {
+              const td = document.createElement('td');
+              const val = dataTable[i][colIndex];
+              td.textContent = (val === undefined || val === null) ? '' : val;
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          }
+
+          tableEl.appendChild(thead);
+          tableEl.appendChild(tbody);
+        }
+
+        function extractSimpleTableFromSheet(sheet) {
+          if (!sheet) return null;
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+          if (!rows || !rows.length) return null;
+
+          let headerIdx = -1;
+          for (let i = 0; i < rows.length; i++) {
+            const firstCell = String(rows[i][0] ?? '').trim();
+            if (firstCell === '№') { headerIdx = i; break; }
+          }
+          if (headerIdx === -1) return null;
+
+          const headerRow = rows[headerIdx].slice();
+          const resultRows = [];
+          for (let i = headerIdx + 1; i < rows.length; i++) {
+            const row = rows[i];
+            const hasData = row.some(v => String(v).trim() !== '');
+            if (!hasData) break;
+            resultRows.push(row.slice(0, headerRow.length));
+          }
+          if (!resultRows.length) return null;
+          return [headerRow, ...resultRows];
+        }
+
+        function extractCbAsOfDateFromSheet(sheet) {
+          if (!sheet) return '';
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+          if (!rows || !rows.length) return '';
+
+          let labelRow = -1;
+          let labelCol = -1;
+
+          for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            for (let j = 0; j < row.length; j++) {
+              const cellText = String(row[j] ?? '').trim().toUpperCase();
+              if (cellText === 'ПО СОСТОЯНИЮ НА') {
+                labelRow = i; labelCol = j; break;
+              }
+            }
+            if (labelRow !== -1) break;
+          }
+
+          if (labelRow === -1) return '';
+
+          function getFirstNonEmpty(row, startCol) {
+            if (!row) return '';
+            for (let k = startCol; k < row.length; k++) {
+              const s = String(row[k] ?? '').trim();
+              if (s) return row[k];
+            }
+            return '';
+          }
+
+          let rawVal = getFirstNonEmpty(rows[labelRow], labelCol + 1);
+          if (!rawVal && labelRow + 1 < rows.length) {
+            rawVal = getFirstNonEmpty(rows[labelRow + 1], 0);
+          }
+          if (!rawVal) return '';
+          return formatExcelDate(rawVal);
+        }
+
+        function normalizeDividendsTable(table) {
+          if (!table || table.length <= 1) return table;
+          const dHeader = table[0];
+          const dIdxDate = dHeader.findIndex(c =>
+            String(c).trim().toUpperCase() === 'ДАТА ТРАНЗАКЦИИ'
+          );
+          if (dIdxDate === -1) return table;
+          for (let i = 1; i < table.length; i++) {
+            if (table[i][dIdxDate] !== undefined) {
+              table[i][dIdxDate] = formatExcelDate(table[i][dIdxDate]);
+            }
+          }
+          return table;
+        }
+
+        function normalizeRepoTable(table) {
+          if (!table || table.length <= 1) return table;
+          const rHeader = table[0];
+          const rIdxDate = rHeader.findIndex(c =>
+            String(c).trim().toUpperCase() === 'ДАТА ТРАНЗАКЦИИ'
+          );
+          if (rIdxDate === -1) return table;
+          for (let i = 1; i < table.length; i++) {
+            if (table[i][rIdxDate] !== undefined) {
+              table[i][rIdxDate] = formatExcelDate(table[i][rIdxDate]);
+            }
+          }
+          return table;
+        }
+
+        // ===== Core: processing workbook =====
+        function processWorkbookArrayBuffer(arrayBuffer, sourceLabelForUi) {
+          try {
+            const data = new Uint8Array(arrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetNames = workbook.SheetNames;
+
+            // Лист 1: Движение ФИ
+            const sheetFi = workbook.Sheets[sheetNames[0]];
+            const rowsFi  = XLSX.utils.sheet_to_json(sheetFi, { header: 1, defval: '' });
+            if (!rowsFi.length) {
+              alert('Не удалось прочитать данные из файла.');
+              return;
+            }
+
+            const headerInfo = extractHeaderInfoFromFiSheet(sheetFi);
+            setMeta(headerInfo);
+
+            const headerIndex = rowsFi.findIndex(row =>
+              row.some(cell => String(cell).trim().toUpperCase() === 'ISIN ЦБ')
+            );
+            if (headerIndex === -1) {
+              alert('Не найдена строка с заголовком "ISIN ЦБ" на листе "Движение ФИ".');
+              return;
+            }
+
+            const header = rowsFi[headerIndex].slice();
+            const rowsAfterHeader = rowsFi.slice(headerIndex + 1);
+
+            const findIndexCI = (title) =>
+              header.findIndex(c => String(c).trim().toUpperCase() === title.toUpperCase());
+
+            const isinIndex          = findIndexCI('ISIN ЦБ');
+            const priceAcquireIndex  = findIndexCI('ЦЕНА ПРИОБРЕТЕНИЯ ОДНОЙ ЦБ');
+            let   priceIndex         = findIndexCI('ЦЕНА');
+            const coeffIndex         = findIndexCI('КОЭФФИЦИЕНТ КОНВЕРТАЦИИ');
+            const dateTradeIndex     = findIndexCI('ДАТА ТОРГОВОЙ ОПЕРАЦИИ');
+            const qtyIndex           = findIndexCI('КОЛИЧЕСТВО ЦБ');
+            const commissionIndex    = findIndexCI('КОМИССИИ ПО СДЕЛКЕ');
+            const marketIndex        = findIndexCI('РЫНОК ЦБ');
+
+            colNameIndex       = findIndexCI('НАИМЕНОВАНИЕ (ТИП)');
+            colTypeIndex       = findIndexCI('ТИП ЦБ');
+            colCurrencyIndex   = findIndexCI('КОД ВАЛЮТЫ');
+            colDirectionIndex = findIndexCI('НАПРАВЛЕНИЕ ОПЕРАЦИИ');
+            colCountryIndex    = findIndexCI('КОД СТРАНЫ РЕГИСТРАЦИИ ЭМИТЕНТА');
+
+            // Find Transfer Columns
+            colTransferFromIndex = findIndexCI('ПЕРЕВОД ОТКУДА');
+            colTransferToIndex   = findIndexCI('ПЕРЕВОД КУДА');
+
+            if (priceAcquireIndex !== -1 && priceIndex === -1) {
+              header[priceAcquireIndex] = 'Цена';
+              priceIndex = priceAcquireIndex;
+            }
+
+            function ensureColumn(title) {
+              const idx = header.findIndex(c => String(c).trim().toUpperCase() === title.toUpperCase());
+              if (idx !== -1) return idx;
+              header.push(title);
+              return header.length - 1;
+            }
+
+            const costIndex        = ensureColumn('Себестоимость (без ком.)');
+            const saleAmountIndex  = ensureColumn('Сумма при продаже (без ком.)');
+            const profitIndex      = ensureColumn('Прибыль / Убыток (без ком.)');
+            const costWithCommissionIndex = ensureColumn('Себестоимость (с ком.)');
+            const saleAmountWithCommissionIndex = ensureColumn('Сумма при продаже (с ком.)');
+            const profitWithCommissionIndex = ensureColumn('Прибыль / Убыток (с ком.)');
+            // !! NEW COLUMN (В данных создаем)
+            const profitKztIndex   = ensureColumn('Прибыль / Убыток эквивалент в тенге');
+
+            const balanceQtyIndex  = ensureColumn('Остаток (шт)');
+            const balanceCostIndex = ensureColumn('Балансовая стоимость остатка (без ком.)');
+            const avgCostIndex     = ensureColumn('Сред. стоимость остатка (без ком.)');
+            const balanceCostWithCommissionIndex = ensureColumn('Балансовая стоимость остатка (с ком.)');
+            const avgCostWithCommissionIndex = ensureColumn('Сред. стоимость остатка (с ком.)');
+
+            colPriceIndex        = priceIndex;
+            colCoeffIndex        = coeffIndex;
+            colIsinIndex         = isinIndex;
+            colQtyIndex          = qtyIndex;
+            colCommissionIndex   = commissionIndex;
+            colCostIndex         = costIndex;
+            colSaleAmountIndex   = saleAmountIndex;
+            colProfitIndex       = profitIndex;
+            colCostWithCommissionIndex = costWithCommissionIndex;
+            colSaleAmountWithCommissionIndex = saleAmountWithCommissionIndex;
+            colProfitWithCommissionIndex = profitWithCommissionIndex;
+            // SAVE INDEX
+            colProfitKztIndex    = profitKztIndex;
+
+            colBalanceQtyIndex   = balanceQtyIndex;
+            colBalanceCostIndex  = balanceCostIndex;
+            colAvgCostIndex      = avgCostIndex;
+            colBalanceCostWithCommissionIndex = balanceCostWithCommissionIndex;
+            colAvgCostWithCommissionIndex = avgCostWithCommissionIndex;
+            colDateIndex         = dateTradeIndex;
+            colMarketIndex       = marketIndex;
+
+            const dataRowsFi = rowsAfterHeader
+              .filter(r => r.some(c => String(c).trim() !== ''))
+              .filter(row => {
+                if (isinIndex === -1) return true;
+                const val = row[isinIndex] === undefined ? '' : row[isinIndex];
+                return String(val).trim() !== '';
+              })
+              .map(row => {
+                if (dateTradeIndex !== -1 && row[dateTradeIndex] !== undefined) {
+                  row[dateTradeIndex] = formatExcelDate(row[dateTradeIndex]);
+                }
+                return row;
+              });
+
+            fullData = [header, ...dataRowsFi];
+            lastData = fullData;
+
+            convertDecimalDotsToCommasForColumns(fullData, [priceIndex, coeffIndex]);
+            computeMissingArrivalInfo(fullData, isinIndex, qtyIndex, colNameIndex);
+
+            buildYearFilterOptions(fullData, dateTradeIndex);
+            applyYearFilter(); 
+
+            // Листы 2–4
+            dividendsData      = null;
+            repoData           = null;
+            cbData             = null;
+            cbAsOfDate         = '';
+            dividendsDataFull  = null;
+            repoDataFull       = null;
+
+            const sheetDividends = sheetNames[1] ? workbook.Sheets[sheetNames[1]] : null;
+            const sheetRepo      = sheetNames[2] ? workbook.Sheets[sheetNames[2]] : null;
+            const sheetCb        = sheetNames[3] ? workbook.Sheets[sheetNames[3]] : null;
+
+            dividendsData = normalizeDividendsTable(extractSimpleTableFromSheet(sheetDividends));
+            repoData      = normalizeRepoTable(extractSimpleTableFromSheet(sheetRepo));
+            cbAsOfDate    = extractCbAsOfDateFromSheet(sheetCb);
+            cbData        = extractSimpleTableFromSheet(sheetCb);
+
+            dividendsDataFull = dividendsData;
+            repoDataFull      = repoData;
+
+            const hasDividends = dividendsDataFull && dividendsDataFull.length > 1;
+            const hasRepo      = repoDataFull && repoDataFull.length > 1;
+            const hasCb        = cbData && cbData.length > 1;
+
+            if (!hasDividends && dividendsTable) dividendsTable.innerHTML = '';
+            if (!hasRepo && repoTable)           repoTable.innerHTML      = '';
+            if (!hasCb && cbTable)               cbTable.innerHTML        = '';
+
+            let allowDivUpload  = false;
+            let allowRepoUpload = false;
+            let allowCbUpload   = false;
+
+            if (dividendsUploadPanel) {
+              if (hasDividends) dividendsUploadPanel.style.display = 'none';
+              else { dividendsUploadPanel.style.display = 'inline-flex'; allowDivUpload = true; }
+            }
+
+            if (repoUploadPanel) {
+              if (hasRepo) repoUploadPanel.style.display = 'none';
+              else { repoUploadPanel.style.display = 'inline-flex'; allowRepoUpload = true; }
+            }
+
+            if (cbUploadPanel) {
+              if (hasCb) cbUploadPanel.style.display = 'none';
+              else { cbUploadPanel.style.display = 'inline-flex'; allowCbUpload = true; }
+            }
+
+            tabBtnDividends.disabled = !hasDividends && !allowDivUpload;
+            tabBtnRepo.disabled      = !hasRepo      && !allowRepoUpload;
+            tabBtnCb.disabled        = !hasCb        && !allowCbUpload;
+
+            applyYearFilterToDividendsAndRepo();
+            renderSimpleTable(cbTable, cbData, { asOfDate: cbAsOfDate });
+
+            if (sourceLabelForUi) fileLabel.textContent = sourceLabelForUi;
+            switchTab('fi');
+            updateButtonsState();
+
+          } catch (err) {
+            console.error(err);
+            alert('Ошибка при обработке файла.');
+          }
+        }
+
+        processBtn.addEventListener('click', () => {
+          if (!selectedFile) {
+            alert('Сначала выберите Excel.');
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            processWorkbookArrayBuffer(e.target.result, selectedFile.name);
+          };
+          reader.readAsArrayBuffer(selectedFile);
+        });
+
+        // ===== HS modal logic =====
+        function openHsModal(){
+          if (hsBtn && hsBtn.disabled) return;
+          if (!hsModal) return;
+          hsModal.style.display = 'flex';
+          if (hsAccountInput) {
+            hsAccountInput.value = '';
+            setTimeout(() => hsAccountInput.focus(), 0);
+          }
+        }
+        function closeHsModal(){
+          if (!hsModal) return;
+          hsModal.style.display = 'none';
+        }
+
+        if (hsBtn) {
+          hsBtn.addEventListener('click', () => {
+            if (hsBtn.disabled) return;
+            openHsModal();
+          });
+        }
+
+        if (hsCancelBtn) {
+          hsCancelBtn.addEventListener('click', closeHsModal);
+        }
+
+        if (hsModal) {
+          hsModal.addEventListener('click', (e) => {
+            if (e.target === hsModal) closeHsModal();
+          });
+        }
+
+        async function handleHsProcess(){
+          const acc = String(hsAccountInput ? hsAccountInput.value : '').trim();
+          if (!acc) {
+            alert('Введите номер лицевого счёта.');
+            return;
+          }
+
+          try {
+             alert("HS API не подключен в этом демо. Пожалуйста, используйте загрузку Excel файла.");
+             closeHsModal();
+
+          } catch (e) {
+            console.error(e);
+            alert(e && e.message ? e.message : 'Не удалось получить данные из HS.');
+          }
+        }
+
+        if (hsProcessBtn) {
+          hsProcessBtn.addEventListener('click', handleHsProcess);
+        }
+        if (hsAccountInput) {
+          hsAccountInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleHsProcess();
+            if (e.key === 'Escape') closeHsModal();
+          });
+        }
+
+        function clearTables() {
+          if (tablesWrapper) tablesWrapper.innerHTML = '';
+          if (navList) navList.innerHTML = '';
+          if (navCount) navCount.textContent = '0';
+
+          navYellowCount = 0;
+          navRedCount    = 0;
+          navInfoCount   = 0;
+          updateNavStats();
+        }
+
+        // --- SCROLL SPY INIT ---
+        function initScrollSpy() {
+            if (scrollObserver) {
+                scrollObserver.disconnect();
+            }
+
+            const tableContainerEl = document.getElementById('table-container');
+
+            const options = {
+                root: tableContainerEl,
+                rootMargin: '-40% 0px -60% 0px', 
+                threshold: 0
+            };
+
+            scrollObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+                        const activeBtn = document.querySelector(`.nav-item[data-target="${id}"]`);
+                        if (activeBtn) {
+                            activeBtn.classList.add('active');
+                            activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                    }
+                });
+            }, options);
+
+            document.querySelectorAll('.table-wrapper').forEach(section => {
+                scrollObserver.observe(section);
+            });
+        }
+
+        function renderTablesByIsin(
+          data,
+          priceColIndex,
+          coeffColIndex,
+          isinColIndex,
+          qtyColIndex,
+          costColIndex,
+          saleAmountColIndex,
+          profitColIndex,
+          balanceQtyColIndex,
+          balanceCostColIndex,
+          avgCostColIndex,
+          profitKztColIndex // NEW ARG
+        ) {
+          if (!data || data.length <= 1) {
+            clearTables();
+            if (placeholder) placeholder.style.display = 'flex';
+            return;
+          }
+
+          if (placeholder) placeholder.style.display = 'none';
+          clearTables();
+
+          let currentKey      = null;
+          let currentLabel    = null;
+          let table           = null;
+          let tbody           = null;
+          let wrapper         = null;
+          let groupHasRed     = false;
+          let groupHasYellow  = false;
+          let groupHasEditedRed = false; 
+          let groupHasEditedYellow = false; 
+          let groupHasMultipleTickers = false;
+          
+          let sectionCounter = 0; // Для ID таблиц
+
+          const header = data[0];
+          const rows   = data.slice(1);
+
+          const isinTickers = {};
+          if (isinColIndex != null && isinColIndex >= 0 &&
+              colNameIndex != null && colNameIndex >= 0) {
+            rows.forEach(row => {
+              const isinVal =
+                row[isinColIndex] !== undefined ? String(row[isinColIndex]).trim() : '';
+              if (!isinVal) return;
+              const rawName  = row[colNameIndex];
+              const tickerVal = extractTickerFromName(rawName);
+              if (!tickerVal) return;
+              if (!isinTickers[isinVal]) isinTickers[isinVal] = new Set();
+              isinTickers[isinVal].add(tickerVal);
+            });
+          }
+
+          const shownNoteForIsin = {};
+
+          function getGroupKey(row) {
+            const isinVal =
+              isinColIndex != null && isinColIndex >= 0 && row[isinColIndex] !== undefined
+                ? String(row[isinColIndex]).trim()
+                : '';
+            let tickerVal = '';
+            if (colNameIndex != null && colNameIndex >= 0 && row[colNameIndex] !== undefined) {
+              tickerVal = extractTickerFromName(row[colNameIndex]);
+            }
+            return tickerVal ? (isinVal + '||' + tickerVal) : isinVal;
+          }
+
+          function getLabelFromKey(row) {
+            const isinVal =
+              isinColIndex != null && isinColIndex >= 0 && row[isinColIndex] !== undefined
+                ? String(row[isinColIndex]).trim()
+                : '';
+            let tickerVal = '';
+            if (colNameIndex != null && colNameIndex >= 0 && row[colNameIndex] !== undefined) {
+              tickerVal = extractTickerFromName(row[colNameIndex]);
+            }
+            return tickerVal ? `${isinVal} (${tickerVal})` : isinVal;
+          }
+
+          function isCalcCol(idx) {
+            return idx === costColIndex ||
+                   idx === saleAmountColIndex ||
+                   idx === profitColIndex ||
+                   idx === colCostWithCommissionIndex ||
+                   idx === colSaleAmountWithCommissionIndex ||
+                   idx === colProfitWithCommissionIndex ||
+                   idx === balanceQtyColIndex ||
+                   idx === balanceCostColIndex ||
+                   idx === avgCostColIndex ||
+                   idx === colBalanceCostWithCommissionIndex ||
+                   idx === colAvgCostWithCommissionIndex ||
+                   idx === profitKztColIndex; 
+          }
+
+          function isCommissionCalcCol(idx) {
+            return idx === colCostWithCommissionIndex ||
+                   idx === colSaleAmountWithCommissionIndex ||
+                   idx === colProfitWithCommissionIndex ||
+                   idx === colBalanceCostWithCommissionIndex ||
+                   idx === colAvgCostWithCommissionIndex;
+          }
+
+          function finalizeGroup() {
+            if (!table) return;
+            const hasMissingArrival =
+              missingArrivalKeys && missingArrivalKeys.has(currentKey);
+
+            addNavItem(currentLabel, table, groupHasRed, groupHasYellow, groupHasEditedRed, groupHasEditedYellow, hasMissingArrival, groupHasMultipleTickers);
+          }
+
+          let fifoLotsNoCommission = [];
+          let fifoLotsWithCommission = [];
+          let runningQty      = 0;
+          let runningCostNoCommission = 0;
+          let runningCostWithCommission = 0;
+
+          rows.forEach((row, idx) => {
+            const globalRowIndex = idx + 1;
+            const key    = getGroupKey(row);
+            const label = getLabelFromKey(row);
+
+            const isinVal =
+              isinColIndex != null && isinColIndex >= 0 && row[isinColIndex] !== undefined
+                ? String(row[isinColIndex]).trim()
+                : '';
+
+            const needNewGroup = !table || key !== currentKey;
+
+            if (needNewGroup) {
+              if (table) finalizeGroup();
+
+              currentKey    = key;
+              currentLabel = label;
+
+              fifoLotsNoCommission = [];
+              fifoLotsWithCommission = [];
+              runningQty    = 0;
+              runningCostNoCommission = 0;
+              runningCostWithCommission = 0;
+              groupHasRed = false;
+              groupHasYellow = false;
+              groupHasEditedRed = false;
+              groupHasEditedYellow = false;
+
+              sectionCounter++;
+              const sectionId = 'section-' + sectionCounter;
+
+              wrapper = document.createElement('div');
+              wrapper.className = 'table-wrapper';
+              wrapper.id = sectionId;
+
+              const hasMissingForGroup =
+                missingArrivalKeys && missingArrivalKeys.has(currentKey);
+              if (hasMissingForGroup) {
+                const warnDiv = document.createElement('div');
+                warnDiv.className = 'local-warning';
+                warnDiv.textContent =
+                  'По данному инструменту (ISIN+тикер) общее количество ухода превышает общее количество прихода. Пожалуйста, скорректируйте данные и загрузите файл повторно.';
+                wrapper.appendChild(warnDiv);
+              }
+
+              const tickersSet = isinTickers[isinVal];
+              groupHasMultipleTickers =
+                tickersSet && tickersSet.size && tickersSet.size > 1;
+
+              if (groupHasMultipleTickers && !shownNoteForIsin[isinVal]) {
+                const noteDiv = document.createElement('div');
+                noteDiv.className = 'local-note';
+                noteDiv.textContent =
+                  'Обратите внимание: по данному ISIN в отчёте встретилось несколько разных тикеров. FIFO и средняя цена рассчитываются отдельно по связке ISIN+тикер.';
+                wrapper.appendChild(noteDiv);
+                shownNoteForIsin[isinVal] = true;
+              }
+
+              table = document.createElement('table');
+              table.className = 'data-table';
+              const thead = document.createElement('thead');
+              tbody = document.createElement('tbody');
+
+              const headTr = document.createElement('tr');
+              header.forEach((h, colIndex) => {
+                // !!! SKIP RENDERING PROFIT KZT COLUMN IN MAIN VIEW !!!
+                if (colIndex === profitKztColIndex) return;
+
+                const th = document.createElement('th');
+                th.textContent = h;
+                if (isCalcCol(colIndex)) th.classList.add('calc-col');
+                if (isCommissionCalcCol(colIndex)) th.classList.add('commission-col');
+                if (groupHasMultipleTickers && colIndex === colNameIndex) {
+                  th.classList.add('market-highlight');
+                }
+                headTr.appendChild(th);
+              });
+              thead.appendChild(headTr);
+              table.appendChild(thead);
+              table.appendChild(tbody);
+
+              table.addEventListener('dblclick', onTableDblClick);
+              if (typeof isTouch !== 'undefined' && isTouch) {
+  attachLongPressEdit(table);
+}
+
+              table.addEventListener('blur', onTableBlur, true);
+
+              wrapper.appendChild(table);
+              tablesWrapper.appendChild(wrapper);
+            }
+
+            let priceNum = NaN;
+            let coeffNum = NaN;
+            if (priceColIndex != null && priceColIndex >= 0) priceNum = parseNumber(row[priceColIndex]);
+            if (coeffColIndex != null && coeffColIndex >= 0) coeffNum = parseNumber(row[coeffColIndex]);
+            const qty = qtyColIndex != null && qtyColIndex >= 0 ? parseNumber(row[qtyColIndex]) : NaN;
+
+            const effectivePrice = !Number.isNaN(priceNum) && priceNum !== 0
+              ? priceNum
+              : (!Number.isNaN(coeffNum) && coeffNum !== 0 ? coeffNum : NaN);
+
+            const commissionRaw = colCommissionIndex != null && colCommissionIndex >= 0 ? parseNumber(row[colCommissionIndex]) : NaN;
+            const commissionTotal = Number.isNaN(commissionRaw) ? 0 : commissionRaw;
+
+            let costForRowNoCommission = '';
+            let saleAmountForRowNoCommission = '';
+            let profitForRowNoCommission = '';
+            let costForRowWithCommission = '';
+            let saleAmountForRowWithCommission = '';
+            let profitForRowWithCommission = '';
+
+            if (!Number.isNaN(qty) && qty !== 0) {
+              const baseUnitPrice = Number.isNaN(effectivePrice) ? 0 : effectivePrice;
+
+              if (qty > 0) {
+                const commissionPerUnit = qty !== 0 ? commissionTotal / qty : 0;
+                const unitPriceNoCommission = baseUnitPrice;
+                const unitPriceWithCommission = baseUnitPrice + commissionPerUnit;
+                const lotCostNoCommission = qty * unitPriceNoCommission;
+                const lotCostWithCommission = qty * unitPriceWithCommission;
+
+                fifoLotsNoCommission.push({ qty, price: unitPriceNoCommission });
+                fifoLotsWithCommission.push({ qty, price: unitPriceWithCommission });
+                runningQty += qty;
+                runningCostNoCommission += lotCostNoCommission;
+                runningCostWithCommission += lotCostWithCommission;
+
+                costForRowNoCommission = lotCostNoCommission ? formatNumberComma(lotCostNoCommission) : '';
+                costForRowWithCommission = lotCostWithCommission ? formatNumberComma(lotCostWithCommission) : '';
+              } else {
+                let sellQtyNoCommission = Math.abs(qty);
+                let sellQtyWithCommission = Math.abs(qty);
+                let costNoCommission = 0;
+                let costWithCommission = 0;
+
+                while (sellQtyNoCommission > 0 && fifoLotsNoCommission.length > 0) {
+                  const lot = fifoLotsNoCommission[0];
+                  const take = Math.min(sellQtyNoCommission, lot.qty);
+                  costNoCommission += take * lot.price;
+                  lot.qty -= take;
+                  sellQtyNoCommission -= take;
+                  if (lot.qty === 0) fifoLotsNoCommission.shift();
+                }
+
+                while (sellQtyWithCommission > 0 && fifoLotsWithCommission.length > 0) {
+                  const lot = fifoLotsWithCommission[0];
+                  const take = Math.min(sellQtyWithCommission, lot.qty);
+                  costWithCommission += take * lot.price;
+                  lot.qty -= take;
+                  sellQtyWithCommission -= take;
+                  if (lot.qty === 0) fifoLotsWithCommission.shift();
+                }
+
+                runningQty += qty;
+                if (runningQty < 0) runningQty = 0;
+                runningCostNoCommission -= costNoCommission;
+                runningCostWithCommission -= costWithCommission;
+                if (runningCostNoCommission < 0) runningCostNoCommission = 0;
+                if (runningCostWithCommission < 0) runningCostWithCommission = 0;
+
+                const grossSaleAmount = Math.abs(qty) * baseUnitPrice;
+                const saleAmountNoCommission = grossSaleAmount;
+                const saleAmountWithCommission = grossSaleAmount - commissionTotal;
+                const profitNoCommission = saleAmountNoCommission - costNoCommission;
+                const profitWithCommission = saleAmountWithCommission - costWithCommission;
+
+                costForRowNoCommission = costNoCommission ? formatNumberComma(costNoCommission) : '';
+                saleAmountForRowNoCommission = saleAmountNoCommission ? formatNumberComma(saleAmountNoCommission) : '';
+                profitForRowNoCommission = (saleAmountNoCommission || costNoCommission) ? formatNumberComma(profitNoCommission) : '';
+                costForRowWithCommission = costWithCommission ? formatNumberComma(costWithCommission) : '';
+                saleAmountForRowWithCommission = saleAmountWithCommission ? formatNumberComma(saleAmountWithCommission) : '';
+                profitForRowWithCommission = (saleAmountWithCommission || costWithCommission) ? formatNumberComma(profitWithCommission) : '';
+              }
+
+              const balanceQty = runningQty;
+              const avgCostNoCommission = balanceQty > 0 ? runningCostNoCommission / balanceQty : 0;
+              const avgCostWithCommission = balanceQty > 0 ? runningCostWithCommission / balanceQty : 0;
+
+              row[colBalanceQtyIndex] = balanceQty.toString();
+              row[colBalanceCostIndex] = runningCostNoCommission ? formatNumberComma(runningCostNoCommission) : '';
+              row[colAvgCostIndex] = balanceQty > 0 ? formatNumberComma(avgCostNoCommission) : '';
+              row[colBalanceCostWithCommissionIndex] = runningCostWithCommission ? formatNumberComma(runningCostWithCommission) : '';
+              row[colAvgCostWithCommissionIndex] = balanceQty > 0 ? formatNumberComma(avgCostWithCommission) : '';
+            }
+
+            row[colCostIndex] = costForRowNoCommission;
+            row[colSaleAmountIndex] = saleAmountForRowNoCommission;
+            row[colProfitIndex] = profitForRowNoCommission;
+            row[colCostWithCommissionIndex] = costForRowWithCommission;
+            row[colSaleAmountWithCommissionIndex] = saleAmountForRowWithCommission;
+            row[colProfitWithCommissionIndex] = profitForRowWithCommission;
+
+            const tr = document.createElement('tr');
+            row.forEach((cell, colIndex) => {
+              // !!! SKIP RENDERING PROFIT KZT COLUMN IN MAIN VIEW !!!
+              if (colIndex === profitKztColIndex) return;
+
+              const td = document.createElement('td');
+              td.textContent        = cell;
+              td.dataset.rowIndex = String(globalRowIndex);
+              td.dataset.colIndex = String(colIndex);
+              
+              if (colIndex === colIsinIndex) td.classList.add('cell-isin');
+              if (isCalcCol(colIndex))       td.classList.add('calc-col');
+              if (isCommissionCalcCol(colIndex)) td.classList.add('commission-col');
+              
+              if (colIndex === colNameIndex) {
+                td.classList.add('cell-edit-name');
+                td.title = 'Двойной клик для изменения наименования';
+              } else if (groupHasMultipleTickers && colIndex === colNameIndex) {
+                 td.classList.add('market-highlight');
+              }
+
+              // !! Logic for new column editing (now visible)
+              if (colIndex === colProfitKztIndex) {
+          // Эквивалент в тенге рассчитывается автоматически по курсу на дату операции (после интеграции с API).
+          // Ручной ввод отключён.
+          td.classList.add('cell-readonly');
+          td.title = 'Эквивалент в тенге рассчитывается автоматически по курсу на дату операции (будет доступно после интеграции с API курса валют).';
+        }
+
+              // !!! Редактируемые поля ПЕРЕВОДА !!!
+              if ((colTransferFromIndex != null && colIndex === colTransferFromIndex) || 
+                  (colTransferToIndex != null && colIndex === colTransferToIndex)) {
+                  td.classList.add('cell-edit-transfer');
+                  td.title = 'Двойной клик для редактирования перевода';
+              }
+
+              // CHECK FOR EDITED STATUS
+              const cellKey = `${globalRowIndex}-${colIndex}`;
+              const editStatus = editedCells.get(cellKey);
+
+              if (priceColIndex != null &&
+                  coeffColIndex != null &&
+                  priceColIndex >= 0 &&
+                  coeffColIndex >= 0) {
+                
+                // --- Logic for highlighting red/yellow/edited ---
+                if (priceNum === 0 && coeffNum === 0 && colIndex === priceColIndex) {
+                  td.classList.add('cell-edit-red');
+                  td.title = 'Двойной клик для редактирования цены';
+                  groupHasRed = true;
+                } 
+                else if (priceNum === 0 && coeffNum === 1 && colIndex === coeffColIndex) {
+                  td.classList.add('cell-edit-yellow');
+                  td.title = 'Двойной клик для редактирования коэффициента';
+                  groupHasYellow = true;
+                }
+                else if (editStatus === 'red') {
+                    td.classList.add('cell-edited-red');
+                    groupHasEditedRed = true;
+                }
+                else if (editStatus === 'yellow') {
+                    td.classList.add('cell-edited-yellow');
+                    groupHasEditedYellow = true;
+                }
+              }
+
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
+
+          if (table) finalizeGroup();
+          
+          setTimeout(initScrollSpy, 100);
+        }
+
+        function recomputeFifoInLastData() {
+          const data = fullData || lastData;
+          if (!data || data.length <= 1) return;
+          if (colQtyIndex == null || colPriceIndex == null || colCoeffIndex == null) return;
+
+          const rows = data.slice(1);
+          let currentIsin = null;
+          let fifoStateByTicker = {};
+
+          function getTickerState(tickerVal) {
+            const key = tickerVal || '__NO_TICKER__';
+            if (!fifoStateByTicker[key]) {
+              fifoStateByTicker[key] = {
+                fifoLotsNoCommission: [],
+                fifoLotsWithCommission: [],
+                runningQty: 0,
+                runningCostNoCommission: 0,
+                runningCostWithCommission: 0
+              };
+            }
+            return fifoStateByTicker[key];
+          }
+
+          rows.forEach(row => {
+            const isinVal =
+              colIsinIndex != null && colIsinIndex >= 0 && row[colIsinIndex] !== undefined
+                ? String(row[colIsinIndex]).trim()
+                : '';
+
+            const needNewGroup = currentIsin === null || (isinVal && isinVal !== currentIsin);
+            if (needNewGroup) {
+              currentIsin = isinVal;
+              fifoStateByTicker = {};
+            }
+
+            let tickerVal = '';
+            if (colNameIndex != null && colNameIndex >= 0 && row[colNameIndex] !== undefined) {
+              tickerVal = extractTickerFromName(row[colNameIndex]);
+            }
+
+            const state = getTickerState(tickerVal);
+            let fifoLotsNoCommission = state.fifoLotsNoCommission;
+            let fifoLotsWithCommission = state.fifoLotsWithCommission;
+            let runningQty = state.runningQty;
+            let runningCostNoCommission = state.runningCostNoCommission;
+            let runningCostWithCommission = state.runningCostWithCommission;
+
+            const priceNum = parseNumber(row[colPriceIndex]);
+            const coeffNum = parseNumber(row[colCoeffIndex]);
+            const qty = parseNumber(row[colQtyIndex]);
+            const commissionRaw = colCommissionIndex != null && colCommissionIndex >= 0 ? parseNumber(row[colCommissionIndex]) : NaN;
+            const commissionTotal = Number.isNaN(commissionRaw) ? 0 : commissionRaw;
+
+            const effectivePrice = !Number.isNaN(priceNum) && priceNum !== 0
+              ? priceNum
+              : (!Number.isNaN(coeffNum) && coeffNum !== 0 ? coeffNum : NaN);
+
+            let costForRowNoCommission = '';
+            let saleAmountForRowNoCommission = '';
+            let profitForRowNoCommission = '';
+            let costForRowWithCommission = '';
+            let saleAmountForRowWithCommission = '';
+            let profitForRowWithCommission = '';
+
+            if (!Number.isNaN(qty) && qty !== 0) {
+              const baseUnitPrice = Number.isNaN(effectivePrice) ? 0 : effectivePrice;
+
+              if (qty > 0) {
+                const commissionPerUnit = qty !== 0 ? commissionTotal / qty : 0;
+                const unitPriceNoCommission = baseUnitPrice;
+                const unitPriceWithCommission = baseUnitPrice + commissionPerUnit;
+                const lotCostNoCommission = qty * unitPriceNoCommission;
+                const lotCostWithCommission = qty * unitPriceWithCommission;
+
+                fifoLotsNoCommission.push({ qty, price: unitPriceNoCommission });
+                fifoLotsWithCommission.push({ qty, price: unitPriceWithCommission });
+                runningQty += qty;
+                runningCostNoCommission += lotCostNoCommission;
+                runningCostWithCommission += lotCostWithCommission;
+
+                costForRowNoCommission = lotCostNoCommission ? formatNumberComma(lotCostNoCommission) : '';
+                costForRowWithCommission = lotCostWithCommission ? formatNumberComma(lotCostWithCommission) : '';
+              } else {
+                let sellQtyNoCommission = Math.abs(qty);
+                let sellQtyWithCommission = Math.abs(qty);
+                let costNoCommission = 0;
+                let costWithCommission = 0;
+
+                while (sellQtyNoCommission > 0 && fifoLotsNoCommission.length > 0) {
+                  const lot = fifoLotsNoCommission[0];
+                  const take = Math.min(sellQtyNoCommission, lot.qty);
+                  costNoCommission += take * lot.price;
+                  lot.qty -= take;
+                  sellQtyNoCommission -= take;
+                  if (lot.qty === 0) fifoLotsNoCommission.shift();
+                }
+
+                while (sellQtyWithCommission > 0 && fifoLotsWithCommission.length > 0) {
+                  const lot = fifoLotsWithCommission[0];
+                  const take = Math.min(sellQtyWithCommission, lot.qty);
+                  costWithCommission += take * lot.price;
+                  lot.qty -= take;
+                  sellQtyWithCommission -= take;
+                  if (lot.qty === 0) fifoLotsWithCommission.shift();
+                }
+
+                runningQty += qty;
+                if (runningQty < 0) runningQty = 0;
+                runningCostNoCommission -= costNoCommission;
+                runningCostWithCommission -= costWithCommission;
+                if (runningCostNoCommission < 0) runningCostNoCommission = 0;
+                if (runningCostWithCommission < 0) runningCostWithCommission = 0;
+
+                const grossSaleAmount = Math.abs(qty) * baseUnitPrice;
+                const saleAmountNoCommission = grossSaleAmount;
+                const saleAmountWithCommission = grossSaleAmount - commissionTotal;
+                const profitNoCommission = saleAmountNoCommission - costNoCommission;
+                const profitWithCommission = saleAmountWithCommission - costWithCommission;
+
+                costForRowNoCommission = costNoCommission ? formatNumberComma(costNoCommission) : '';
+                saleAmountForRowNoCommission = saleAmountNoCommission ? formatNumberComma(saleAmountNoCommission) : '';
+                profitForRowNoCommission = (saleAmountNoCommission || costNoCommission) ? formatNumberComma(profitNoCommission) : '';
+                costForRowWithCommission = costWithCommission ? formatNumberComma(costWithCommission) : '';
+                saleAmountForRowWithCommission = saleAmountWithCommission ? formatNumberComma(saleAmountWithCommission) : '';
+                profitForRowWithCommission = (saleAmountWithCommission || costWithCommission) ? formatNumberComma(profitWithCommission) : '';
+              }
+
+              const balanceQty = runningQty;
+              const avgCostNoCommission = balanceQty > 0 ? runningCostNoCommission / balanceQty : 0;
+              const avgCostWithCommission = balanceQty > 0 ? runningCostWithCommission / balanceQty : 0;
+
+              row[colBalanceQtyIndex] = balanceQty.toString();
+              row[colBalanceCostIndex] = runningCostNoCommission ? formatNumberComma(runningCostNoCommission) : '';
+              row[colAvgCostIndex] = balanceQty > 0 ? formatNumberComma(avgCostNoCommission) : '';
+              row[colBalanceCostWithCommissionIndex] = runningCostWithCommission ? formatNumberComma(runningCostWithCommission) : '';
+              row[colAvgCostWithCommissionIndex] = balanceQty > 0 ? formatNumberComma(avgCostWithCommission) : '';
+            }
+
+            row[colCostIndex] = costForRowNoCommission;
+            row[colSaleAmountIndex] = saleAmountForRowNoCommission;
+            row[colProfitIndex] = profitForRowNoCommission;
+            row[colCostWithCommissionIndex] = costForRowWithCommission;
+            row[colSaleAmountWithCommissionIndex] = saleAmountForRowWithCommission;
+            row[colProfitWithCommissionIndex] = profitForRowWithCommission;
+
+            state.fifoLotsNoCommission = fifoLotsNoCommission;
+            state.fifoLotsWithCommission = fifoLotsWithCommission;
+            state.runningQty = runningQty;
+            state.runningCostNoCommission = runningCostNoCommission;
+            state.runningCostWithCommission = runningCostWithCommission;
+          });
+        }
+
+        function isCalcColIndex(index) {
+          return index === colCostIndex ||
+                 index === colSaleAmountIndex ||
+                 index === colProfitIndex ||
+                 index === colCostWithCommissionIndex ||
+                 index === colSaleAmountWithCommissionIndex ||
+                 index === colProfitWithCommissionIndex ||
+                 index === colBalanceQtyIndex ||
+                 index === colBalanceCostIndex ||
+                 index === colAvgCostIndex ||
+                 index === colBalanceCostWithCommissionIndex ||
+                 index === colAvgCostWithCommissionIndex ||
+                 index === colProfitKztIndex; // Include new col
+        }
+
+        function refreshCalcCellsInDom() {
+          if (!lastData) return;
+          const tds = tablesWrapper.querySelectorAll('td');
+          tds.forEach(td => {
+            const rowIndex = parseInt(td.dataset.rowIndex, 10);
+            const colIndex = parseInt(td.dataset.colIndex, 10);
+            if (isNaN(rowIndex) || isNaN(colIndex)) return;
+            if (!lastData[rowIndex]) return;
+            if (isCalcColIndex(colIndex)) {
+              const val = lastData[rowIndex][colIndex];
+              td.textContent = val == null ? '' : val;
+            }
+          });
+        }
+
+        function addNavItem(label, tableEl, hasRed, hasYellow, hasEditedRed, hasEditedYellow, hasMissingArrival, hasMultipleTickers) {
+          if (!navList) return;
+          const item = document.createElement('div');
+          item.className = 'nav-item';
+          
+          const targetId = tableEl.parentElement.id; 
+          item.setAttribute('data-target', targetId);
+
+          if (hasMissingArrival) {
+              item.classList.add('nav-item-red');
+          } else if (hasEditedRed) {
+              item.classList.add('nav-item-edited-red');
+          } else if (hasEditedYellow) {
+              item.classList.add('nav-item-edited-yellow');
+          } else if (hasRed) {
+              item.classList.add('nav-item-red');
+          } else if (hasYellow) {
+              item.classList.add('nav-item-yellow');
+          }
+
+          item.textContent = label || '(без ISIN/тикера)';
+
+          if (hasMultipleTickers) {
+            const badge = document.createElement('span');
+            badge.className = 'nav-info-badge';
+            badge.textContent = 'i';
+            badge.title = 'По данному ISIN в отчёте встретилось несколько разных тикеров. FIFO и средняя цена рассчитываются отдельно по связке ISIN+тикер.';
+            badge.addEventListener('click', (e) => e.stopPropagation());
+            item.appendChild(badge);
+          }
+
+          item.addEventListener('click', () => {
+             const targetEl = document.getElementById(targetId);
+             if (targetEl) {
+                 targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                 document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+                 item.classList.add('active');
+             }
+            if (typeof isTouch !== 'undefined' && isTouch) {
+  closeNav();
+}
+
+          });
+
+          if (hasYellow) navYellowCount++;
+          if (hasMissingArrival || hasRed) navRedCount++;
+          if (hasMultipleTickers) navInfoCount++;
+          updateNavStats();
+
+          navList.appendChild(item);
+          if (navCount) navCount.textContent = navList.children.length.toString();
+        }
+
+        function startEditing(td) {
+          if (currentEditingCell && currentEditingCell !== td) finishEditing(currentEditingCell);
+          currentEditingCell = td;
+          td.setAttribute('contenteditable', 'true');
+          td.focus();
+
+          const range = document.createRange();
+          range.selectNodeContents(td);
+          const sel = window.getSelection();
+          if (sel) { sel.removeAllRanges(); sel.addRange(range); }
+        }
+
+        function finishEditing(td) {
+          const rowIndex = parseInt(td.dataset.rowIndex, 10);
+          const colIndex = parseInt(td.dataset.colIndex, 10);
+          
+          if (!isNaN(rowIndex) && !isNaN(colIndex) && lastData && lastData[rowIndex]) {
+            lastData[rowIndex][colIndex] = td.textContent.trim();
+          }
+
+          td.removeAttribute('contenteditable');
+          if (currentEditingCell === td) currentEditingCell = null;
+
+          if (!isNaN(colIndex) && colIndex === colNameIndex) {
+             computeMissingArrivalInfo(lastData, colIsinIndex, colQtyIndex, colNameIndex);
+             
+             renderTablesByIsin(
+                lastData,
+                colPriceIndex, colCoeffIndex, colIsinIndex, colQtyIndex,
+                colCostIndex, colSaleAmountIndex, colProfitIndex,
+                colBalanceQtyIndex, colBalanceCostIndex, colAvgCostIndex,
+                colProfitKztIndex
+              );
+             updateNavStats();
+             return;
+          }
+
+          // If edited any calc param OR the KZT column itself
+          if (!isNaN(colIndex) &&
+              (colIndex === colPriceIndex || colIndex === colCoeffIndex || colIndex === colQtyIndex || colIndex === colProfitKztIndex)) {
+            
+            const cellKey = `${rowIndex}-${colIndex}`;
+
+            if (td.classList.contains('cell-edit-red')) {
+               editedCells.set(cellKey, 'red'); // Remember this was a red fix
+               td.classList.remove('cell-edit-red');
+               td.classList.add('cell-edited-red');
+            } else if (td.classList.contains('cell-edit-yellow')) {
+               editedCells.set(cellKey, 'yellow'); // Remember this was a yellow fix
+               td.classList.remove('cell-edit-yellow');
+               td.classList.add('cell-edited-yellow');
+            }
+
+            // Only recompute FIFO if inputs changed, KZT col change doesn't affect FIFO logic
+            if (colIndex !== colProfitKztIndex) {
+                recomputeFifoInLastData(); 
+            }
+            refreshCalcCellsInDom();
+            
+            // Re-render nav to update colors
+            renderTablesByIsin(
+                lastData,
+                colPriceIndex, colCoeffIndex, colIsinIndex, colQtyIndex,
+                colCostIndex, colSaleAmountIndex, colProfitIndex,
+                colBalanceQtyIndex, colBalanceCostIndex, colAvgCostIndex,
+                colProfitKztIndex
+            );
+          }
+        }
+function isEditableTd(td){
+  if (!td) return false;
+
+  // Ручной ввод для колонок "эквивалент в тенге" отключён:
+  // эквивалент будет рассчитываться автоматически по курсу валют на дату операции (после интеграции с API).
+  const table = td.closest('table');
+  if (table){
+    const col = td.cellIndex;
+    const header = table.querySelectorAll('thead th')[col];
+    if (header && /эквивалент\s+в\s+тенге/i.test((header.textContent || '').trim())) return false;
+  }
+
+  return (
+    td.classList.contains('cell-edit-red') ||
+    td.classList.contains('cell-edit-yellow') ||
+    td.classList.contains('cell-edited-red') ||
+    td.classList.contains('cell-edited-yellow') ||
+    td.classList.contains('cell-edit-name') ||
+    td.classList.contains('cell-edit-transfer')
+  );
+}
+
+function attachLongPressEdit(table){
+  if (!table) return;
+
+  let timer = null;
+  let startTd = null;
+  let moved = false;
+
+  const clear = () => {
+    if (timer) { clearTimeout(timer); timer = null; }
+    startTd = null;
+    moved = false;
+  };
+
+  table.addEventListener('touchstart', (e) => {
+    if (!isTouch) return;
+    const td = e.target.closest('td');
+    if (!isEditableTd(td)) return;
+
+    moved = false;
+    startTd = td;
+
+    timer = setTimeout(() => {
+      if (!moved && startTd) startEditing(startTd);
+      clear();
+    }, 450);
+  }, { passive: true });
+
+  table.addEventListener('touchmove', () => {
+    moved = true;
+    clear();
+  }, { passive: true });
+
+  table.addEventListener('touchend', clear, { passive: true });
+  table.addEventListener('touchcancel', clear, { passive: true });
+}
+
+       function onTableDblClick(event) {
+  const td = event.target.closest('td');
+  if (!isEditableTd(td)) return;
+  startEditing(td);
+}
+
+
+        function onTableBlur(event) {
+          const td = event.target;
+          if (td === currentEditingCell) finishEditing(td);
+        }
+
+        resetBtn.addEventListener('click', () => {
+          fileInput.value        = '';
+          selectedFile           = null;
+          lastData               = null;
+          fullData               = null;
+          currentEditingCell     = null;
+          missingArrivalKeys     = new Set();
+          hasMissingTicker       = false;
+          dividendsData          = null;
+          repoData               = null;
+          cbData                 = null;
+          cbAsOfDate             = '';
+          dividendsDataFull      = null;
+          repoDataFull           = null;
+          editedCells            = new Map();
+
+          dividendsSelectedFile = null;
+          repoSelectedFile      = null;
+          cbSelectedFile        = null;
+
+          if (dividendsUploadPanel) dividendsUploadPanel.style.display = 'none';
+          if (repoUploadPanel)      repoUploadPanel.style.display      = 'none';
+          if (cbUploadPanel)        cbUploadPanel.style.display        = 'none';
+
+          if (dividendsFileInput) dividendsFileInput.value = '';
+          if (repoFileInput)      repoFileInput.value      = '';
+          if (cbFileInput)        cbFileInput.value        = '';
+
+          if (dividendsFileLabel) dividendsFileLabel.textContent = '...';
+          if (repoFileLabel)      repoFileLabel.textContent      = '...';
+          if (cbFileLabel)        cbFileLabel.textContent        = '...';
+
+          if (dividendsProcessBtn) dividendsProcessBtn.disabled = true;
+          if (repoProcessBtn)      repoProcessBtn.disabled      = true;
+          if (cbProcessBtn)        cbProcessBtn.disabled        = true;
+
+          clearTables();
+          if (placeholder) placeholder.style.display = 'flex';
+          fileLabel.textContent = 'Файл не выбран';
+
+          if (yearFilter) {
+            yearFilter.innerHTML = '<option value="all">Все доступные годы</option>';
+            yearFilter.value = 'all';
+            yearFilter.disabled = true;
+            customDateRangeDiv.classList.remove('active');
+            dateFromInput.value = '';
+            dateToInput.value = '';
+          }
+
+          if (dividendsTable) dividendsTable.innerHTML = '';
+          if (repoTable)      repoTable.innerHTML      = '';
+          if (cbTable)        cbTable.innerHTML        = '';
+
+          tabBtnDividends.disabled = true;
+          tabBtnRepo.disabled      = true;
+          tabBtnCb.disabled        = true;
+          switchTab('fi');
+
+          hideWarning();
+          resetMeta();
+
+          // Reset transfer columns
+          colTransferFromIndex = null;
+          colTransferToIndex = null;
+
+          setSourceMode(null);
+          updateButtonsState();
+        });
+
+        exportBtn.addEventListener('click', () => {
+  const hasFi = lastData && lastData.length > 1;
+  const hasDiv = dividendsDataFull && dividendsDataFull.length > 1;
+  const hasRepo = repoDataFull && repoDataFull.length > 1;
+  const hasCb = cbData && cbData.length > 1;
+
+  if (!hasFi && !hasDiv && !hasRepo && !hasCb) {
+    alert('Нет данных для выгрузки.');
+    return;
+  }
+
+  const wb = XLSX.utils.book_new();
+
+  // 1) Движение
+  if (hasFi) {
+    const wsFi = XLSX.utils.aoa_to_sheet(lastData);
+    XLSX.utils.book_append_sheet(wb, wsFi, 'Движение');
+  }
+
+  // 2) Дивиденды
+  if (hasDiv) {
+    const wsDiv = XLSX.utils.aoa_to_sheet(dividendsDataFull);
+    XLSX.utils.book_append_sheet(wb, wsDiv, 'Дивиденды');
+  }
+
+  // 3) РЕПО
+  if (hasRepo) {
+    const wsRepo = XLSX.utils.aoa_to_sheet(repoDataFull);
+    XLSX.utils.book_append_sheet(wb, wsRepo, 'РЕПО');
+  }
+
+  // 4) Остатки ЦБ
+  if (hasCb) {
+    let aoaCb = cbData;
+    if (cbAsOfDate) {
+      const cols = (cbData[0] || []).length || 1;
+      const infoRow = new Array(cols).fill('');
+      infoRow[0] = 'По состоянию на: ' + cbAsOfDate;
+      aoaCb = [infoRow, ...cbData];
+    }
+    const wsCb = XLSX.utils.aoa_to_sheet(aoaCb);
+    XLSX.utils.book_append_sheet(wb, wsCb, 'Остатки ЦБ');
+  }
+
+  // Имя файла покрасивее
+  const fio = (metaFio && metaFio.value) ? metaFio.value.trim() : '';
+  const acc = (metaAccount && metaAccount.value) ? metaAccount.value.trim() : '';
+  const asOf = (metaAsOf && metaAsOf.value) ? metaAsOf.value.trim() : '';
+  const safe = (s) => String(s || '').replace(/[\\/:*?"<>|]+/g, '').trim();
+
+  const fileNameParts = ['Финрез'];
+  if (fio) fileNameParts.push(safe(fio));
+  if (acc) fileNameParts.push(safe(acc));
+  if (asOf) fileNameParts.push(safe(asOf));
+
+  XLSX.writeFile(wb, fileNameParts.join(' - ') + '.xlsx');
+});
+
+
+        // ===== Year report =====
+        function escapeHtml(val) {
+          const str = val == null ? '' : String(val);
+          return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        }
+
+        function cloneDataTable(data) {
+          return (data || []).map(row => Array.isArray(row) ? row.slice() : []);
+        }
+
+        function recomputeFifoForReportData(data, includeCommission) {
+          if (!data || data.length <= 1) return data;
+          if (colQtyIndex == null || colPriceIndex == null || colCoeffIndex == null) return data;
+
+          const rows = data.slice(1);
+          let currentIsin = null;
+          let fifoStateByTicker = {};
+
+          function getTickerState(tickerVal) {
+            const key = tickerVal || '__NO_TICKER__';
+            if (!fifoStateByTicker[key]) {
+              fifoStateByTicker[key] = { fifoLots: [], runningQty: 0, runningCost: 0 };
+            }
+            return fifoStateByTicker[key];
+          }
+
+          rows.forEach(row => {
+            const isinVal =
+              colIsinIndex != null && colIsinIndex >= 0 && row[colIsinIndex] !== undefined
+                ? String(row[colIsinIndex]).trim()
+                : '';
+
+            const needNewGroup = currentIsin === null || (isinVal && isinVal !== currentIsin);
+            if (needNewGroup) {
+              currentIsin = isinVal;
+              fifoStateByTicker = {};
+            }
+
+            let tickerVal = '';
+            if (colNameIndex != null && colNameIndex >= 0 && row[colNameIndex] !== undefined) {
+              tickerVal = extractTickerFromName(row[colNameIndex]);
+            }
+
+            const state = getTickerState(tickerVal);
+            let fifoLots = state.fifoLots;
+            let runningQty = state.runningQty;
+            let runningCost = state.runningCost;
+
+            const priceNum = parseNumber(row[colPriceIndex]);
+            const coeffNum = parseNumber(row[colCoeffIndex]);
+            const qty = parseNumber(row[colQtyIndex]);
+            const commissionRaw = colCommissionIndex != null && colCommissionIndex >= 0 ? parseNumber(row[colCommissionIndex]) : NaN;
+            const commissionTotal = Number.isNaN(commissionRaw) ? 0 : commissionRaw;
+
+            const effectivePrice = !Number.isNaN(priceNum) && priceNum !== 0
+              ? priceNum
+              : (!Number.isNaN(coeffNum) && coeffNum !== 0 ? coeffNum : NaN);
+
+            let costForRow = '';
+            let saleAmountForRow = '';
+            let profitForRow = '';
+
+            if (!Number.isNaN(qty) && qty !== 0) {
+              if (qty > 0) {
+                const baseUnitPrice = Number.isNaN(effectivePrice) ? 0 : effectivePrice;
+                const commissionPerUnit = includeCommission && qty !== 0 ? commissionTotal / qty : 0;
+                const unitPrice = baseUnitPrice + commissionPerUnit;
+                const lotCost = qty * unitPrice;
+                fifoLots.push({ qty, price: unitPrice });
+                runningQty += qty;
+                runningCost += lotCost;
+                costForRow = lotCost ? formatNumberComma(lotCost) : '';
+              } else {
+                let sellQty = Math.abs(qty);
+                let cost = 0;
+                while (sellQty > 0 && fifoLots.length > 0) {
+                  const lot = fifoLots[0];
+                  const take = Math.min(sellQty, lot.qty);
+                  cost += take * lot.price;
+                  lot.qty -= take;
+                  sellQty -= take;
+                  if (lot.qty === 0) fifoLots.shift();
+                }
+                runningQty += qty;
+                if (runningQty < 0) runningQty = 0;
+                runningCost -= cost;
+                if (runningCost < 0) runningCost = 0;
+
+                const unitPrice = Number.isNaN(effectivePrice) ? 0 : effectivePrice;
+                const grossSaleAmount = Math.abs(qty) * unitPrice;
+                const saleCommission = includeCommission ? commissionTotal : 0;
+                const saleAmount = grossSaleAmount - saleCommission;
+                const profit = saleAmount - cost;
+
+                costForRow = cost ? formatNumberComma(cost) : '';
+                saleAmountForRow = saleAmount ? formatNumberComma(saleAmount) : '';
+                profitForRow = (saleAmount || cost) ? formatNumberComma(profit) : '';
+              }
+
+              const balanceQty = runningQty;
+              const balanceCost = runningCost;
+              const avgCost = balanceQty > 0 ? balanceCost / balanceQty : 0;
+
+              row[colBalanceQtyIndex] = balanceQty.toString();
+              row[colBalanceCostIndex] = balanceCost ? formatNumberComma(balanceCost) : '';
+              row[colAvgCostIndex] = balanceQty > 0 ? formatNumberComma(avgCost) : '';
+            }
+
+            row[colCostIndex] = costForRow;
+            row[colSaleAmountIndex] = saleAmountForRow;
+            row[colProfitIndex] = profitForRow;
+
+            state.fifoLots = fifoLots;
+            state.runningQty = runningQty;
+            state.runningCost = runningCost;
+          });
+
+          return data;
+        }
+
+        function openYearReport(options) {
+          const reportOptions = options || {};
+          const includeCommission = !!reportOptions.includeCommission;
+          const rkOnly = reportOptions.scope === 'rk';
+          const reportTitle = reportOptions.reportTitle || 'Отчет о финансовых результатах';
+          const reportTitleFull = reportOptions.reportTitleFull || (includeCommission
+            ? 'Финансовый результат по операциям c ценными бумагами на всех рынках (с учетом брокерской комиссии)'
+            : 'Финансовый результат по операциям c ценными бумагами на всех рынках (без учета брокерской комиссии)');
+          const reportNoteText = reportOptions.reportNoteText || (includeCommission
+            ? 'Финансовый результат по операциям реализации финансовых инструментов определяется как разница между стоимостью реализации и стоимостью приобретения с учетом брокерской комиссии. При расчете себестоимости реализованных финансовых инструментов применяется метод FIFO (First In, First Out).'
+            : 'Финансовый результат по операциям реализации финансовых инструментов определяется как разница между стоимостью реализации и стоимостью приобретения. При расчете себестоимости реализованных финансовых инструментов применяется метод FIFO (First In, First Out).');
+          if (!lastData || lastData.length <= 1) {
+            alert('Нет данных для отчёта.');
+            return;
+          }
+
+          const filterValue = yearFilter ? yearFilter.value : 'all';
+          if (filterValue === 'portfolio') {
+            alert('Для отчёта выберите конкретный год или период.');
+            return;
+          }
+
+          let selectedYear = null;
+          let yearText = 'Все доступные годы';
+          let dFrom = null;
+          let dTo = null;
+
+          if (filterValue === 'custom') {
+             const dF = dateFromInput.value;
+             const dT = dateToInput.value;
+             if (dF && dT) {
+                 const fmt = (iso) => {
+                     const [y, m, d] = iso.split('-');
+                     return `${d}.${m}.${y}`;
+                 };
+                 yearText = `${fmt(dF)} — ${fmt(dT)}`;
+                 dFrom = new Date(dF);
+                 dTo = new Date(dT);
+                 dTo.setHours(23, 59, 59, 999);
+             } else {
+                 yearText = 'Произвольный период (все даты)';
+             }
+          } else if (filterValue !== 'all') {
+             selectedYear = parseInt(filterValue, 10);
+             yearText = String(selectedYear);
+          }
+
+          const formedAt = (() => {
+            const d = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          })();
+
+          const periodText = (() => {
+            if (selectedYear != null) return `с 01.01.${selectedYear} по 31.12.${selectedYear}`;
+            if (dFrom && dTo) {
+              const fmt = (d) => {
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
+              };
+              return `с ${fmt(dFrom)} по ${fmt(dTo)}`;
+            }
+            return yearText;
+          })();
+
+          function addToTotals(map, ccy, value) {
+            if (!ccy) return;
+            if (value == null || Number.isNaN(value) || value === 0) return;
+            if (!map[ccy]) map[ccy] = 0;
+            map[ccy] += value;
+          }
+
+          function formatMoney(num) {
+            if (num == null || isNaN(num) || num === 0) return '';
+            return Number(num).toFixed(2).replace('.', ',');
+          }
+
+          // Gather metadata from input fields
+          const clientName = metaFio ? metaFio.value : '';
+          const brokerAccount = metaAccount ? metaAccount.value : '';
+
+          // 1. СБОР ДАННЫХ
+          const reportDataForCalc = recomputeFifoForReportData(cloneDataTable(lastData), includeCommission);
+          const rows = reportDataForCalc.slice(1);
+          const salesRows = [];
+          const salesTotalsByCcy = {};
+          let counter = 1;
+          
+          let grandTotalKzt = 0; // Итоговая сумма в тенге
+
+          rows.forEach(row => {
+            if (colSaleAmountIndex == null || colSaleAmountIndex < 0) return;
+            const saleAmount = parseNumber(row[colSaleAmountIndex]);
+            if (Number.isNaN(saleAmount) || saleAmount === 0) return;
+
+            const dirVal = colDirectionIndex != null ? String(row[colDirectionIndex]).trim().toLowerCase() : '';
+            const isSale = dirVal.includes('перечисление инструментов при продаже');
+            const isRedemption = dirVal.includes('списание инструментов при погашении цб');
+
+            if (!isSale && !isRedemption) return; 
+
+            const dateStr = colDateIndex != null ? row[colDateIndex] : '';
+            const rDate = parseExcelDateStr(dateStr);
+            
+            if (selectedYear != null) {
+                if (!rDate || rDate.getFullYear() !== selectedYear) return;
+            } else if (dFrom && dTo) {
+                if (!rDate || rDate < dFrom || rDate > dTo) return;
+            }
+
+            // Данные строки
+            const name    = colNameIndex      != null ? row[colNameIndex]      : '';
+            const qty     = colQtyIndex       != null ? row[colQtyIndex]       : '';
+            const price   = colPriceIndex     != null ? row[colPriceIndex]     : '';
+            const ccy     = colCurrencyIndex  != null ? row[colCurrencyIndex]  : '';
+            const dir     = colDirectionIndex != null ? row[colDirectionIndex] : '';
+            const market  = colMarketIndex    != null ? row[colMarketIndex]    : '';
+            const type    = colTypeIndex      != null ? row[colTypeIndex]      : '';
+            const isin    = colIsinIndex      != null ? row[colIsinIndex]      : '';
+            const country = colCountryIndex   != null ? row[colCountryIndex]   : '';
+            const cost    = colCostIndex      != null ? row[colCostIndex]      : '';
+            const profit  = colProfitIndex    != null ? row[colProfitIndex]    : '';
+            const profitKzt = colProfitKztIndex != null ? row[colProfitKztIndex] : '';
+
+            if (rkOnly && !isAllowedForRkFinrezReport(market, isin, name)) return;
+
+            salesRows.push([
+              counter++, dateStr || '', name || '', qty || '', price || '', ccy || '',
+              dir || '', market || '', type || '', isin || '', country || '',
+              cost || '', row[colSaleAmountIndex] || '', profit || '', profitKzt || ''
+            ]);
+
+            const profitNum = parseNumber(profit);
+            addToTotals(salesTotalsByCcy, String(ccy || '').trim(), profitNum);
+
+            // Суммируем KZT эквивалент из колонки (если заполнено)
+            const kztVal = parseNumber(profitKzt);
+            if (!isNaN(kztVal)) grandTotalKzt += kztVal;
+          });
+
+          // Дивиденды
+          const dividendsRows = [];
+          const dividendsTotalsByCcy = {};
+          
+          if (dividendsDataFull && dividendsDataFull.length > 1) {
+            const dHeader = dividendsDataFull[0];
+            const findDI = (title) => dHeader.findIndex(c => String(c).trim().toUpperCase() === title.toUpperCase());
+            
+            // Индексы колонок дивидендов
+            const dIdxDate = findDI('ДАТА ТРАНЗАКЦИИ');
+            const dIdxName = findDI('НАИМЕНОВАНИЕ (ТИП)');
+            const dIdxQty  = findDI('КОЛИЧЕСТВО ЦБ');
+            const dIdxCcy  = findDI('КОД ВАЛЮТЫ');
+            const dIdxOpType = findDI('ТИП ОПЕРАЦИИ');
+            const dIdxMarket = findDI('РЫНОК ЦБ');
+            const dIdxAssetType = findDI('ТИП ЦБ');
+            const dIdxIsin = findDI('ISIN ЦБ');
+            const dIdxCountry = findDI('КОД СТРАНЫ РЕГИСТРАЦИИ ЭМИТЕНТА');
+            const dIdxAmount = findDI('СУММА В ВАЛЮТЕ');
+
+            let divCounter = 1;
+            for (let i = 1; i < dividendsDataFull.length; i++) {
+              const row = dividendsDataFull[i];
+              if (!row.some(v => String(v).trim() !== '')) continue;
+
+              const dateVal = dIdxDate >= 0 ? row[dIdxDate] : '';
+              const rDate = parseExcelDateStr(dateVal);
+
+              if (selectedYear != null) {
+                  if (!rDate || rDate.getFullYear() !== selectedYear) continue;
+              } else if (dFrom && dTo) {
+                  if (!rDate || rDate < dFrom || rDate > dTo) continue;
+              }
+
+              const dNameVal = dIdxName >= 0 ? row[dIdxName] : '';
+              const dMarketVal = dIdxMarket >= 0 ? row[dIdxMarket] : '';
+              const dIsinVal = dIdxIsin >= 0 ? row[dIdxIsin] : '';
+              if (rkOnly && !isAllowedForRkFinrezReport(dMarketVal, dIsinVal, dNameVal)) continue;
+
+              const ccy = dIdxCcy >= 0 ? row[dIdxCcy] : '';
+              const amountRaw = dIdxAmount >= 0 ? row[dIdxAmount] : '';
+              const amountNum = parseNumber(amountRaw);
+
+              dividendsRows.push([
+                divCounter++,
+                dIdxDate >= 0 ? row[dIdxDate] : '', dNameVal,
+                dIdxQty >= 0 ? row[dIdxQty] : '', ccy || '', dIdxOpType >= 0 ? row[dIdxOpType] : '',
+                dMarketVal, dIdxAssetType >= 0 ? row[dIdxAssetType] : '',
+                dIsinVal, dIdxCountry >= 0 ? row[dIdxCountry] : '',
+                dIdxAmount >= 0 ? row[dIdxAmount] : '', '' 
+              ]);
+              addToTotals(dividendsTotalsByCcy, String(ccy || '').trim(), amountNum);
+            }
+          }
+
+          // РЕПО
+          const repoRows = [];
+          const repoTotalsByCcy = {};
+
+          if (repoDataFull && repoDataFull.length > 1) {
+            const rHeader = repoDataFull[0];
+            const findRI = (title) => rHeader.findIndex(c => String(c).trim().toUpperCase() === title.toUpperCase());
+            
+            const rIdxDate = findRI('ДАТА ТРАНЗАКЦИИ');
+            const rIdxName = findRI('НАИМЕНОВАНИЕ (ТИП)');
+            const rIdxQty  = findRI('КОЛИЧЕСТВО ЦБ');
+            const rIdxCcy  = findRI('КОД ВАЛЮТЫ');
+            const rIdxMarket = findRI('РЫНОК ЦБ');
+            const rIdxCountry = findRI('КОД СТРАНЫ РЕГИСТРАЦИИ ЭМИТЕНТА');
+            const rIdxOpen = findRI('ОБЪЕМ ОТКРЫТИЯ В ВАЛЮТЕ');
+            const rIdxClose = findRI('ОБЪЕМ ЗАКРЫТИЯ В ВАЛЮТЕ');
+
+            let repoCounter = 1;
+            for (let i = 1; i < repoDataFull.length; i++) {
+              const row = repoDataFull[i];
+              if (!row.some(v => String(v).trim() !== '')) continue;
+
+              const dateVal = rIdxDate >= 0 ? row[rIdxDate] : '';
+              const rDate = parseExcelDateStr(dateVal);
+
+              if (selectedYear != null) {
+                  if (!rDate || rDate.getFullYear() !== selectedYear) continue;
+              } else if (dFrom && dTo) {
+                  if (!rDate || rDate < dFrom || rDate > dTo) continue;
+              }
+
+              const rMarketVal = rIdxMarket >= 0 ? row[rIdxMarket] : '';
+              if (rkOnly && !isAllowedForRkFinrezReport(rMarketVal, '', '')) continue;
+
+              const openRaw = rIdxOpen >= 0 ? row[rIdxOpen] : '';
+              const closeRaw = rIdxClose >= 0 ? row[rIdxClose] : '';
+              const openNum = parseNumber(openRaw);
+              const closeNum = parseNumber(closeRaw);
+              
+              let reward = '';
+              let rewardNum = NaN;
+              if (!Number.isNaN(openNum) || !Number.isNaN(closeNum)) {
+                const diff = (Number.isNaN(closeNum) ? 0 : closeNum) - (Number.isNaN(openNum) ? 0 : openNum);
+                rewardNum = diff;
+                reward = diff.toFixed(2).replace('.', ',');
+              }
+              const ccy = rIdxCcy >= 0 ? row[rIdxCcy] : '';
+
+              repoRows.push([
+                repoCounter++, rIdxDate >= 0 ? row[rIdxDate] : '', rIdxName >= 0 ? row[rIdxName] : '',
+                rIdxQty >= 0 ? row[rIdxQty] : '', ccy || '', rMarketVal,
+                rIdxCountry >= 0 ? row[rIdxCountry] : '',
+                rIdxOpen >= 0 ? openRaw : '', rIdxClose >= 0 ? closeRaw : '', reward, ''
+              ]);
+              addToTotals(repoTotalsByCcy, String(ccy || '').trim(), rewardNum);
+            }
+          }
+
+          // Остатки ЦБ (CB Data) - ФИЛЬТРАЦИЯ ПУСТЫХ СТОЛБЦОВ
+          let extendedCbHeader = [];
+          let extendedCbRows = [];
+          
+          if (cbData && cbData.length > 0) {
+            // 1. Формируем "сырую" таблицу с добавленными расчетными столбцами
+            // и гарантируем наличие столбца "Рынок" в блоке "Портфель клиента на конец периода".
+            const originalCbHeader = cbData[0] || [];
+            const findCbIndexOriginal = (variants) => originalCbHeader.findIndex(c => variants.includes(normTextForCompare(c)));
+            const cbIdxMarketOriginal = findCbIndexOriginal(['РЫНОК', 'РЫНОК ЦБ']);
+            const cbIdxIsinOriginal = findCbIndexOriginal(['ISIN', 'ISIN ЦБ']);
+            const cbIdxNameOriginal = findCbIndexOriginal(['НАИМЕНОВАНИЕ', 'НАИМЕНОВАНИЕ (ТИП)', 'НАИМЕНОВАНИЕ ЦБ']);
+
+            function getPortfolioMarketFromMovements(isinValue, nameOrTickerValue) {
+              const isinKey = normTextForCompare(isinValue);
+              const tickerKey = normTextForCompare(extractTickerFromName(nameOrTickerValue));
+              if (!fullData || fullData.length <= 1 || colMarketIndex == null || colMarketIndex < 0) return '';
+
+              let marketByIsin = '';
+              for (let i = 1; i < fullData.length; i++) {
+                const mvRow = fullData[i] || [];
+                const mvIsin = colIsinIndex != null && colIsinIndex >= 0 ? normTextForCompare(mvRow[colIsinIndex]) : '';
+                if (!mvIsin || mvIsin !== isinKey) continue;
+
+                const mvMarket = String(mvRow[colMarketIndex] || '').trim();
+                if (!mvMarket) continue;
+                if (!marketByIsin) marketByIsin = mvMarket;
+
+                const mvTicker = colNameIndex != null && colNameIndex >= 0 ? normTextForCompare(extractTickerFromName(mvRow[colNameIndex])) : '';
+                if (tickerKey && mvTicker && mvTicker === tickerKey) return mvMarket;
+              }
+              return marketByIsin;
+            }
+
+            let rawHeaderBase = [...originalCbHeader];
+            let rawRowsBase = cbData.length > 1 ? cbData.slice(1).map(row => [...row]) : [];
+
+            if (cbIdxMarketOriginal < 0) {
+              const insertMarketAt = cbIdxIsinOriginal >= 0 ? cbIdxIsinOriginal + 1 : Math.min(3, rawHeaderBase.length);
+              rawHeaderBase.splice(insertMarketAt, 0, 'Рынок');
+              rawRowsBase = rawRowsBase.map(row => {
+                const isinVal = cbIdxIsinOriginal >= 0 ? row[cbIdxIsinOriginal] : '';
+                const nameVal = cbIdxNameOriginal >= 0 ? row[cbIdxNameOriginal] : '';
+                const detectedMarket = getPortfolioMarketFromMovements(isinVal, nameVal) || 'API / HS';
+                const nextRow = [...row];
+                nextRow.splice(insertMarketAt, 0, detectedMarket);
+                return nextRow;
+              });
+            }
+
+            // !!! ВАЖНО: Заполняем "API / HS" сразу, чтобы фильтр не удалил расчетные столбцы
+            let rawHeader = [...rawHeaderBase, "Сумма приобретения", "Оценочная стоимость на конец периода", "Переоценка позиции"];
+            let rawRows = [];
+            if (rawRowsBase.length > 0) {
+                // Заполняем строки плейсхолдерами
+                rawRows = rawRowsBase;
+
+                const cbHeaderForFilter = rawHeaderBase || [];
+                const findCbIndex = (variants) => cbHeaderForFilter.findIndex(c => variants.includes(normTextForCompare(c)));
+                const cbIdxMarket = findCbIndex(['РЫНОК', 'РЫНОК ЦБ']);
+                const cbIdxIsin = findCbIndex(['ISIN', 'ISIN ЦБ']);
+                const cbIdxName = findCbIndex(['НАИМЕНОВАНИЕ', 'НАИМЕНОВАНИЕ (ТИП)', 'НАИМЕНОВАНИЕ ЦБ']);
+
+                if (rkOnly) {
+                  rawRows = rawRows.filter(row => {
+                    const marketVal = cbIdxMarket >= 0 ? row[cbIdxMarket] : '';
+                    const isinVal = cbIdxIsin >= 0 ? row[cbIdxIsin] : '';
+                    const nameVal = cbIdxName >= 0 ? row[cbIdxName] : '';
+                    return isAllowedForRkFinrezReport(marketVal, isinVal, nameVal);
+                  });
+                }
+
+                rawRows = rawRows.map(row => [...row, "API / HS", "API / HS", "API / HS"]);
+            }
+
+            // 2. Определяем индексы валидных столбцов (не пустых)
+            const validColIndices = [];
+            
+            for (let c = 0; c < rawHeader.length; c++) {
+                const hName = String(rawHeader[c] || '').trim();
+                
+                // Проверяем, есть ли хоть какие-то данные в этом столбце
+                let hasData = false;
+                for (let r = 0; r < rawRows.length; r++) {
+                    const cellVal = rawRows[r][c];
+                    if (cellVal !== undefined && cellVal !== null && String(cellVal).trim() !== '') {
+                        hasData = true;
+                        break;
+                    }
+                }
+
+                // Логика фильтрации:
+                const isCalculated = ["Сумма приобретения", "Оценочная стоимость на конец периода", "Переоценка позиции"].includes(hName);
+                const normalizedCbHeader = hName.toUpperCase().replace(/\s+/g, ' ').trim();
+                const isRegistrationAddress = normalizedCbHeader === 'АДРЕС РЕГИСТРАЦИИ';
+
+                // В печатных формах "2. Фин рез все рынки расчет с комиссии" и
+                // "3. Фин рез все рынки расчет без комиссии" столбец "Адрес регистрации" не выводим.
+                if (isRegistrationAddress) {
+                    continue;
+                }
+                
+                if (hasData) {
+                    validColIndices.push(c);
+                } else {
+                    if (hName !== '' && !isCalculated) {
+                         validColIndices.push(c);
+                    }
+                }
+            }
+
+            // 3. Пересобираем заголовок и строки по валидным индексам
+            extendedCbHeader = validColIndices.map(i => rawHeader[i]);
+            extendedCbRows = rawRows.map(r => validColIndices.map(i => r[i]));
+          }
+
+          // 2. ФОРМИРОВАНИЕ СВОДНОЙ ТАБЛИЦЫ
+          // Группируем по категориям
+          const summaryCategories = [
+            { id: '1', title: 'Отчет о финансовых результатах по операциям с ценными бумагами', totals: salesTotalsByCcy },
+            { id: '2', title: 'Денежные выплаты по ценным бумагам (купоны и дивиденды)', totals: dividendsTotalsByCcy },
+            { id: '3', title: 'Отчет по операциям РЕПО', totals: repoTotalsByCcy }
+          ];
+
+          // Собираем все уникальные валюты для сортировки
+          const allCurrenciesSet = new Set();
+          summaryCategories.forEach(cat => {
+             Object.keys(cat.totals).forEach(c => allCurrenciesSet.add(c));
+          });
+          const allCurrencies = Array.from(allCurrenciesSet);
+          const preferredOrder = ['KZT', 'USD', 'EUR', 'RUB'];
+          allCurrencies.sort((a, b) => {
+            const ia = preferredOrder.indexOf(a);
+            const ib = preferredOrder.indexOf(b);
+            if (ia === -1 && ib === -1) return a.localeCompare(b);
+            if (ia === -1) return 1;
+            if (ib === -1) return -1;
+            return ia - ib;
+          });
+
+          // --- ОБНОВЛЕННЫЙ БЛОК С ЗАГЛУШКАМИ API / HS ---
+          let summaryHtml = `
+            <div class="summary-block">
+              <div class="summary-title">Сводные финансовые показатели</div>
+              <table class="summary-table">
+                <thead>
+                  <tr>
+                    <th>Категория</th>
+                    <th>Валюта</th>
+                    <th>Сумма в валюте</th>
+                    <th>Эквивалент в тенге</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+
+          let finalGrandTotalKzt = 0; 
+
+          summaryCategories.forEach(cat => {
+              const categoryCurrencies = allCurrencies.filter(ccy => cat.totals[ccy] !== undefined && cat.totals[ccy] !== 0);
+              
+              if (categoryCurrencies.length > 0) {
+                  let categorySubtotalKzt = 0; 
+
+                  categoryCurrencies.forEach((ccy, idx) => {
+                      const amount = cat.totals[ccy];
+                      let currentKztValue = 0;
+                      let kztDisplay = '';
+
+                      if (ccy === 'KZT') {
+                          currentKztValue = amount;
+                          kztDisplay = formatMoney(amount);
+                      } else {
+                          // ЛОГИКА ЗАГЛУШЕК API / HS
+                          if (cat.id === '1') {
+                              // Сбор данных из колонки ручного ввода
+                              rows.forEach(r => {
+                                  if (String(r[colCurrencyIndex]).trim() === ccy) {
+                                      const val = parseNumber(r[colProfitKztIndex]);
+                                      if (!isNaN(val)) currentKztValue += val;
+                                  }
+                              });
+                          }
+                          
+                          // Если значение 0 или пусто — пишем API / HS
+                          if (currentKztValue !== 0) {
+                              kztDisplay = formatMoney(currentKztValue);
+                          } else {
+                              kztDisplay = '<span style="color: #CCCCCC; font-size: 10px; font-weight: normal;">API / HS</span>';
+                          }
+                      }
+
+                      categorySubtotalKzt += currentKztValue;
+
+                      summaryHtml += `<tr>`;
+                      if (idx === 0) {
+                          summaryHtml += `<td rowspan="${categoryCurrencies.length + 1}" style="vertical-align:top; font-weight:600; text-align:left;">${escapeHtml(cat.title)}</td>`;
+                      }
+                      summaryHtml += `<td>${ccy}</td>`;
+                      summaryHtml += `<td>${formatMoney(amount)}</td>`;
+                      summaryHtml += `<td>${kztDisplay}</td>`;
+                      summaryHtml += `</tr>`;
+                  });
+
+                  // Итого по категории
+                  summaryHtml += `
+                    <tr class="subtotal-row">
+                        <td colspan="2" style="text-align:right; font-weight:600;">Итого по категории</td>
+                        <td style="font-weight:600; background:#f8fafc; text-align:center;">${categorySubtotalKzt !== 0 ? formatMoney(categorySubtotalKzt) : '<span style="color: #CCCCCC; font-weight: normal;">API / HS</span>'}</td> 
+                    </tr>
+                  `;
+                  
+                  finalGrandTotalKzt += categorySubtotalKzt;
+              }
+          });
+
+          // ОБЩИЙ ИТОГ
+          summaryHtml += `
+              <tr class="grand-total-row">
+                <td colspan="3" style="text-align:right; font-weight:bold;">ИТОГОВЫЙ ФИНАНСОВЫЙ РЕЗУЛЬТА (эквивалент в тенге)</td>
+                <td style="font-weight:bold; text-align:center; background:#e2e8f0;">${finalGrandTotalKzt !== 0 ? formatMoney(finalGrandTotalKzt) : '<span style="color: #999;">API / HS</span>'}</td>
+              </tr>
+          `;
+
+          summaryHtml += `</tbody></table></div>`;
+
+          // 3. ПОДГОТОВКА ДАННЫХ ДЛЯ ЭКСПОРТА (ОБНОВЛЕННАЯ СТРУКТУРА)
+          const exportSummaryData = [];
+          exportSummaryData.push(['Категория', 'Валюта', 'Сумма в валюте', 'Эквивалент в тенге']);
+          
+          summaryCategories.forEach(cat => {
+             const categoryCurrencies = allCurrencies.filter(ccy => cat.totals[ccy] !== undefined && cat.totals[ccy] !== 0);
+             if (categoryCurrencies.length > 0) {
+                 categoryCurrencies.forEach((ccy, idx) => {
+                     const amount = cat.totals[ccy];
+                     const row = [
+                         idx === 0 ? `${cat.id}. ${cat.title}` : '',
+                         ccy,
+                         amount, 
+                         ccy === 'KZT' ? amount : null
+                     ];
+                     exportSummaryData.push(row);
+                 });
+                 exportSummaryData.push(['', '', 'Итого по категории', '']);
+             }
+          });
+          exportSummaryData.push(['ИТОГОВЫЙ ФИНАНСОВЫЙ РЕЗУЛЬТА (эквивалент в тенге)', '', '', grandTotalKzt || '']);
+
+
+          // 4. СБОРКА HTML ОТЧЕТА
+          
+          // Заголовки таблиц детализации
+          const headersSales = [
+            '№','Дата транзакции','Наименование','Количество','Цена','Код валюты',
+            'Тип операции','Рынок','Тип актива','ISIN','Код страны регистрации эмитента',
+            'Сумма приобретения','Сумма реализации','Доход / убыток в валюте',
+            'Доход / убыток (эквивалент в тенге)'
+          ];
+          const headersDividends = [
+            '№','Дата транзакции','Наименование','Количество','Код валюты','Тип операции',
+            'Рынок','Тип актива','ISIN','Код страны регистрации эмитента','Сумма в валюте',
+            'Сумма (эквивалент в тенге)'
+          ];
+          const headersRepo = [
+            '№','Дата закрытия','Наименование','Количество','Код валюты','Рынок',
+            'Код страны регистрации эмитента','Объем открытия','Объем закрытия',
+            'Вознаграждение в валюте','Вознаграждение (эквивалент в тенге)'
+          ];
+
+          // Секция Остатков (HTML)
+          let cbSectionHtml = '';
+          if (extendedCbHeader.length > 0) {
+            cbSectionHtml += `<div class="section"><div class="section-title">Портфель клиента на конец периода</div><div class="table-wrapper"><table class="data-table"><thead><tr><th colspan="${extendedCbHeader.length}" style="text-align:left;">По состоянию на: ${escapeHtml(cbAsOfDate || '')}</th></tr><tr>`;
+            extendedCbHeader.forEach(h => { cbSectionHtml += `<th>${escapeHtml(h)}</th>`; });
+            cbSectionHtml += `</tr></thead><tbody>`;
+            if (extendedCbRows.length === 0) {
+              cbSectionHtml += `<tr><td colspan="${extendedCbHeader.length}">Данные отсутствуют.</td></tr>`;
+            } else {
+              extendedCbRows.forEach(r => {
+                cbSectionHtml += '<tr>';
+                extendedCbHeader.forEach((hName, colIdx) => {
+                  const val = r[colIdx] != null ? r[colIdx] : '';
+                  // Check if this is one of our special placeholder columns
+                  const isPlaceholderCol = ["Сумма приобретения", "Оценочная стоимость на конец периода", "Переоценка позиции"].includes(hName);
+                  
+                  if (isPlaceholderCol) {
+                        // Apply gray styling for API / HS text
+                        cbSectionHtml += `<td style="color: #CCCCCC;">API / HS</td>`;
+                  } else {
+                        cbSectionHtml += `<td>${escapeHtml(val)}</td>`;
+                  }
+                });
+                cbSectionHtml += '</tr>';
+              });
+            }
+            cbSectionHtml += `</tbody></table></div></div>`;
+          }
+
+          // JSON для передачи в новое окно (для Excel функции)
+          const reportPayload = {
+              exportSummaryData, // Новая структура сводной для Excel
+              headersSales, salesRows,
+              headersDividends, dividendsRows,
+              headersRepo, repoRows,
+              cbHeaderRow: extendedCbHeader,
+              cbRows: extendedCbRows,
+              yearText,
+              reportTitle,
+              reportTitleFull,
+              reportNoteText,
+              periodText,
+              formedAt,
+              includeCommission,
+              scope: rkOnly ? 'rk' : 'all'
+          };
+          const reportDataJson = JSON.stringify(reportPayload).replace(/</g, '\\u003c');
+
+          function buildTableHtml(headers, rows) {
+            let html = '<div class="table-wrapper"><table class="data-table"><thead><tr>';
+            headers.forEach(h => { html += '<th>' + escapeHtml(h) + '</th>'; });
+            html += '</tr></thead><tbody>';
+            if (!rows.length) {
+              html += '<tr><td colspan="' + headers.length + '">Данные отсутствуют.</td></tr>';
+            } else {
+              rows.forEach(r => {
+                html += '<tr>';
+                r.forEach(cell => { html += '<td>' + escapeHtml(cell) + '</td>'; });
+                html += '</tr>';
+              });
+            }
+            html += '</tbody></table></div>';
+            return html;
+          }
+
+          // Открытие окна
+          const reportWindow = window.open('', '_blank');
+          if (!reportWindow) {
+            alert('Браузер заблокировал всплывающее окно с отчётом.');
+            return;
+          }
+
+          const htmlContent = `
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Отчет о финансовых результатах</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Times New Roman", Times, serif; background: white; color:#000; font-size: 11px; }
+    .report { padding: 14px 18px; width: 100%; margin: 0 auto; }
+    .logo { display:flex; align-items:center; gap:10px; color:#00856f; font-family: Arial, sans-serif; font-weight:700; font-size: 32px; line-height: .9; margin: 0 0 18px; }
+    .logo-mark { width:48px; height:48px; border:5px solid #00856f; border-radius: 16px; transform: rotate(45deg); }
+    h1 { margin: 0 0 22px; text-align:center; font-size: 15px; font-weight:700; }
+    .report-header { position: relative; margin-bottom: 10px; }
+    .export-buttons { position:absolute; right:0; top:0; display:flex; gap:6px; font-family: Arial, sans-serif; }
+    .export-buttons button { padding: 5px 10px; font-size: 11px; border:1px solid #777; background:#fff; cursor:pointer; }
+    .meta-center { width: 520px; margin: 0 auto 18px; font-size: 11px; }
+    .meta-row { display:grid; grid-template-columns: 190px 1fr; gap:8px; line-height: 1.35; }
+    .meta-label { text-align:right; font-weight:700; }
+    .meta-value { text-align:left; }
+    .section { margin-top: 22px; page-break-inside: avoid; }
+    .section-title, .summary-title { font-size: 12px; font-weight:700; margin: 0 0 4px 0; text-align:left; }
+    .table-wrapper { overflow: visible; }
+    table { border-collapse: collapse; width:100%; }
+    .data-table, .summary-table { font-size: 10px; table-layout: fixed; }
+    .data-table th, .data-table td, .summary-table th, .summary-table td { border:1px solid #000; padding: 4px 5px; text-align:center; vertical-align:middle; word-break: break-word; }
+    .data-table th, .summary-table th { font-weight:700; }
+    .summary-block { margin-top: 8px; }
+    .summary-table td:first-child { text-align:left; font-weight:700; }
+    .summary-table .subtotal-row td { font-weight:700; text-align:right; }
+    .summary-table .grand-total-row td { font-size: 12px; font-weight:700; }
+    .notes { margin-top: 18px; font-size: 11px; line-height: 1.25; }
+    .notes-title { font-weight:700; margin-bottom:5px; }
+    @media print {
+      @page { size: A4 landscape; margin: 8mm; }
+      .export-buttons { display:none !important; }
+      .report { padding:0; }
+      .logo { font-size: 28px; margin-bottom: 14px; }
+      .logo-mark { width:42px; height:42px; }
+      .data-table, .summary-table { font-size: 9px; }
+      .section { page-break-inside: avoid; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>
+</head>
+<body>
+  <div class="report">
+    <div class="report-header">
+      <div class="logo"><span class="logo-mark"></span><span>Halyk<br>Finance</span></div>
+      <h1>${escapeHtml(reportTitleFull)}</h1>
+      <div class="export-buttons">
+        <button type="button" onclick="exportReportToExcel()">Выгрузить Excel</button>
+        <button type="button" onclick="exportReportToPdf()">Выгрузить PDF</button>
+      </div>
+    </div>
+
+    <div class="meta-center">
+       <div class="meta-row"><span class="meta-label">ФИО:</span><span class="meta-value">${escapeHtml(clientName)}</span></div>
+       <div class="meta-row"><span class="meta-label">ИИН:</span><span class="meta-value"></span></div>
+       <div class="meta-row"><span class="meta-label">Брокерский счет:</span><span class="meta-value">${escapeHtml(brokerAccount)}</span></div>
+       <div class="meta-row"><span class="meta-label">Отчетный период:</span><span class="meta-value">${escapeHtml(periodText)}</span></div>
+       <div class="meta-row"><span class="meta-label">Дата формирования отчета:</span><span class="meta-value">${escapeHtml(formedAt)}</span></div>
+    </div>
+
+    ${summaryHtml}
+    
+    ${cbSectionHtml}
+
+    <div class="section">
+      <div class="section-title">Финансовый результат по операциям с финансовыми инструментами</div>
+      ${buildTableHtml(headersSales, salesRows)}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Выплаты по ценным бумагам (дивиденды, купоны)</div>
+      ${buildTableHtml(headersDividends, dividendsRows)}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Финансовый результат по операциям РЕПО</div>
+      ${buildTableHtml(headersRepo, repoRows)}
+    </div>
+
+    <div class="notes">
+      <div class="notes-title">Примечания к отчету</div>
+      <div>Настоящий отчет сформирован на основании данных учетных систем Компании и содержит информацию об операциях с финансовыми инструментами за указанный отчетный период.</div>
+      <div>${escapeHtml(reportNoteText)}</div>
+      <div>Информация, представленная в отчете, носит исключительно информационный характер и не является налоговой декларацией либо официальным налоговым расчетом. Налоговые обязательства определяются самостоятельно в соответствии с законодательством Республики Казахстан.</div>
+    </div>
+  </div>
+  <script>
+    const R = ${reportDataJson};
+
+    function exportReportToExcel() {
+      if (typeof XLSX === 'undefined') { alert('Библиотека XLSX не загружена.'); return; }
+      const wb = XLSX.utils.book_new();
+
+      if (R.exportSummaryData && R.exportSummaryData.length) {
+         const wsSummary = XLSX.utils.aoa_to_sheet(R.exportSummaryData);
+         wsSummary['!cols'] = [{wch: 40}, {wch: 10}, {wch: 20}, {wch: 25}];
+         XLSX.utils.book_append_sheet(wb, wsSummary, 'Сводка');
+      }
+      if (R.cbHeaderRow && R.cbHeaderRow.length) {
+        const cbAoA = [R.cbHeaderRow, ...(R.cbRows || [])];
+        const wsCb = XLSX.utils.aoa_to_sheet(cbAoA);
+        XLSX.utils.book_append_sheet(wb, wsCb, 'Остатки ЦБ');
+      }
+      if (R.headersSales && R.headersSales.length) {
+        const salesAoA = [R.headersSales, ...(R.salesRows || [])];
+        const wsSales = XLSX.utils.aoa_to_sheet(salesAoA);
+        XLSX.utils.book_append_sheet(wb, wsSales, 'Прирост стоимости');
+      }
+      if (R.headersDividends && R.headersDividends.length) {
+        const divAoA = [R.headersDividends, ...(R.dividendsRows || [])];
+        const wsDiv = XLSX.utils.aoa_to_sheet(divAoA);
+        XLSX.utils.book_append_sheet(wb, wsDiv, 'Дивиденды');
+      }
+      if (R.headersRepo && R.headersRepo.length) {
+        const repoAoA = [R.headersRepo, ...(R.repoRows || [])];
+        const wsRepo = XLSX.utils.aoa_to_sheet(repoAoA);
+        XLSX.utils.book_append_sheet(wb, wsRepo, 'РЕПО');
+      }
+      const fileNamePrefix = R.scope === 'rk'
+        ? 'Фин рез РК '
+        : (R.includeCommission ? 'Фин рез все рынки с комиссией ' : 'Фин рез все рынки без комиссии ');
+      const fileName = fileNamePrefix + (R.yearText || '') + '.xlsx';
+      XLSX.writeFile(wb, fileName);
+    }
+
+    function exportReportToPdf() {
+      window.print();
+    }
+  <\/script>
+</body>
+</html>`;
+
+          reportWindow.document.open();
+          reportWindow.document.write(htmlContent);
+          reportWindow.document.close();
+        }
+
+        if (yearReportBtn) yearReportBtn.addEventListener('click', () => openYearReport({
+          includeCommission: false,
+          scope: 'rk',
+          reportTitle: '1. Фин рез РК',
+          reportTitleFull: 'Финансовый результат по операциям c ценными бумагами на рынках РК (KASE и AIX) без комиссии',
+          reportNoteText: 'Финансовый результат по операциям реализации финансовых инструментов на рынках РК (KASE и AIX) определяется как разница между стоимостью реализации и стоимостью приобретения без учета брокерской комиссии. При расчете себестоимости реализованных финансовых инструментов применяется метод FIFO (First In, First Out).'
+        }));
+        if (yearReportCommissionBtn) yearReportCommissionBtn.addEventListener('click', () => openYearReport({
+          includeCommission: true,
+          reportTitle: 'Финансовый результат по операциям c ценными бумагами на всех рынках (с учетом брокерской комиссии)'
+        }));
+        if (yearReportNoCommissionBtn) yearReportNoCommissionBtn.addEventListener('click', () => openYearReport({
+          includeCommission: false,
+          reportTitle: 'Финансовый результат по операциям c ценными бумагами на всех рынках (без учета брокерской комиссии)'
+        }));
+
+        switchTab('fi');
+        updateButtonsState();
+        updateNavStats();
+        setSourceMode(null);
+        resetMeta();
+
+      })();
+    });
+</script>
+</body>
+</html>
